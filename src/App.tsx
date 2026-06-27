@@ -1,66 +1,13 @@
-import { useState, useEffect, useMemo, type ReactNode, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import {
-  LayoutDashboard, Users, School, ClipboardList, Calendar, BookOpen, CheckSquare,
-  Wallet, Award, Briefcase, BarChart3, GraduationCap, Settings as SettingsIcon,
-  Search, Bell, PanelLeft, Sparkles, ShieldCheck, Lock, User as UserIcon, ArrowRight,
+  Home as HomeIcon, Command as CommandIcon, Settings as SettingsIcon, LogOut,
+  Sparkles, ShieldCheck, BookOpen, Wallet, GraduationCap, Lock, User as UserIcon, ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
 import { useApp, type User } from './ui';
 import { roleLabel, type Role } from './data';
-
-import Dashboard from './pages/Dashboard';
-import { Students, Groups, Staff } from './pages/people';
-import { Schedule, Journal, Attendance } from './pages/academic';
-import { Admissions, Finance, Scholarship } from './pages/operations';
-import { Analytics, Graduation } from './pages/insights';
+import { Canvas, ContextDrawer, INTENTS } from './canvas';
 import Settings from './pages/Settings';
-
-interface Meta { label: string; icon: LucideIcon; roles: Role[]; }
-const ALL: Role[] = ['admin', 'teacher', 'accountant', 'student'];
-
-const META: Record<string, Meta> = {
-  dashboard: { label: 'Рабочий стол', icon: LayoutDashboard, roles: ALL },
-  students: { label: 'Студенты', icon: Users, roles: ['admin', 'teacher', 'accountant'] },
-  groups: { label: 'Группы', icon: School, roles: ['admin', 'teacher'] },
-  admissions: { label: 'Приём', icon: ClipboardList, roles: ['admin'] },
-  schedule: { label: 'Расписание', icon: Calendar, roles: ['admin', 'teacher', 'student'] },
-  journal: { label: 'Журнал', icon: BookOpen, roles: ['admin', 'teacher', 'student'] },
-  attendance: { label: 'Посещаемость', icon: CheckSquare, roles: ['admin', 'teacher', 'student'] },
-  finance: { label: 'Финансы', icon: Wallet, roles: ['admin', 'accountant', 'student'] },
-  scholarship: { label: 'Стипендии', icon: Award, roles: ['admin', 'accountant'] },
-  staff: { label: 'Сотрудники', icon: Briefcase, roles: ['admin'] },
-  analytics: { label: 'Аналитика', icon: BarChart3, roles: ['admin', 'teacher', 'accountant'] },
-  graduation: { label: 'Выпуск', icon: GraduationCap, roles: ['admin', 'teacher'] },
-  settings: { label: 'Настройки', icon: SettingsIcon, roles: ALL },
-};
-
-const NAV: { title: string; items: string[] }[] = [
-  { title: 'Обзор', items: ['dashboard'] },
-  { title: 'Обучающиеся', items: ['students', 'groups', 'admissions'] },
-  { title: 'Учебный процесс', items: ['schedule', 'journal', 'attendance'] },
-  { title: 'Финансы', items: ['finance', 'scholarship'] },
-  { title: 'Персонал', items: ['staff'] },
-  { title: 'Аналитика', items: ['analytics', 'graduation'] },
-];
-
-function renderPage(id: string): ReactNode {
-  switch (id) {
-    case 'dashboard': return <Dashboard />;
-    case 'students': return <Students />;
-    case 'groups': return <Groups />;
-    case 'admissions': return <Admissions />;
-    case 'schedule': return <Schedule />;
-    case 'journal': return <Journal />;
-    case 'attendance': return <Attendance />;
-    case 'finance': return <Finance />;
-    case 'scholarship': return <Scholarship />;
-    case 'staff': return <Staff />;
-    case 'analytics': return <Analytics />;
-    case 'graduation': return <Graduation />;
-    case 'settings': return <Settings />;
-    default: return <Dashboard />;
-  }
-}
 
 /* ===================== Login ===================== */
 const ROLE_OPTS: { role: Role; icon: LucideIcon; hint: string }[] = [
@@ -71,7 +18,7 @@ const ROLE_OPTS: { role: Role; icon: LucideIcon; hint: string }[] = [
 ];
 
 function Login() {
-  const { setUser, setPage } = useApp();
+  const { setUser, goHome } = useApp();
   const [role, setRole] = useState<Role>('admin');
   const [name, setName] = useState('');
   const [pass, setPass] = useState('');
@@ -81,7 +28,7 @@ function Login() {
     e.preventDefault();
     if (!name.trim()) { setErr('Введите имя'); return; }
     if (pass !== '0000') { setErr('Неверный пароль (для демо: 0000)'); return; }
-    setPage('dashboard');
+    goHome();
     setUser({ name: name.trim(), role } as User);
   };
 
@@ -91,9 +38,9 @@ function Login() {
         <div className="brand-mark" style={{ width: 36, height: 36, fontSize: 18 }}>N</div>
         <div>
           <div className="lead">Корпоративная платформа, рождённая в эпоху ИИ.</div>
-          <div className="sub">NEX встроил интеллект в каждый процесс — без отдельного чат-бота. Подсказки, предотвращение ошибок и безопасность работают сами.</div>
+          <div className="sub">Здесь нет меню модулей и чат-бота. Вы описываете задачу — NEX сам находит данные, действия и подсказывает следующий шаг.</div>
           <div style={{ marginTop: 26 }}>
-            <div className="login-feat"><span className="ico"><Sparkles size={15} /></span>Помощь в нужный момент, а не отдельной кнопкой</div>
+            <div className="login-feat"><span className="ico"><Sparkles size={15} /></span>Интерфейс собирается вокруг вашего намерения</div>
             <div className="login-feat"><span className="ico"><ShieldCheck size={15} /></span>Аудит, сессии и контроль доступа из коробки</div>
           </div>
         </div>
@@ -111,9 +58,7 @@ function Login() {
               const Icon = o.icon;
               return (
                 <button type="button" key={o.role} className={`role-btn ${role === o.role ? 'active' : ''}`} onClick={() => setRole(o.role)}>
-                  <Icon className="ico" size={18} />
-                  <b>{roleLabel[o.role]}</b>
-                  <span>{o.hint}</span>
+                  <Icon className="ico" size={18} /><b>{roleLabel[o.role]}</b><span>{o.hint}</span>
                 </button>
               );
             })}
@@ -142,111 +87,75 @@ function Login() {
   );
 }
 
-/* ===================== Command palette ===================== */
+/* ===================== Command palette (secondary discoverability map) ===================== */
 function CommandPalette() {
-  const { cmdOpen, setCmdOpen, setPage, user } = useApp();
+  const { cmdOpen, setCmdOpen, runAsk, user } = useApp();
   const [q, setQ] = useState('');
   const items = useMemo(() => {
-    const ids = Object.keys(META).filter((id) => user && META[id].roles.includes(user.role));
-    return ids
-      .map((id) => ({ id, label: META[id].label }))
-      .filter((x) => x.label.toLowerCase().includes(q.toLowerCase()));
+    const list = INTENTS.filter((i) => user && i.roles.includes(user.role));
+    return list.filter((x) => x.label.toLowerCase().includes(q.toLowerCase()) || x.q.includes(q.toLowerCase()));
   }, [q, user]);
 
   useEffect(() => { if (!cmdOpen) setQ(''); }, [cmdOpen]);
   if (!cmdOpen) return null;
 
-  const go = (id: string) => { setPage(id); setCmdOpen(false); };
+  const submit = (e: FormEvent) => { e.preventDefault(); if (q.trim()) runAsk(q.trim()); };
 
   return (
     <div className="cmd-overlay" onClick={() => setCmdOpen(false)}>
-      <div className="cmd-modal" onClick={(e) => e.stopPropagation()}>
-        <input className="cmd-input" autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Что нужно сделать? Введите команду или вопрос…" />
+      <form className="cmd-modal" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <input className="cmd-input" autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Спросите или дайте команду…" />
         <div className="cmd-list">
-          <div className="cmd-section">Переход</div>
+          <div className="cmd-section">Разделы и интенты</div>
           {items.map((it) => {
-            const Icon = META[it.id].icon;
-            return (
-              <div className="cmd-item" key={it.id} onClick={() => go(it.id)}>
-                <Icon size={16} />{it.label}<span className="hint">↵</span>
-              </div>
-            );
+            const Icon = it.icon;
+            return <div className="cmd-item" key={it.q} onClick={() => runAsk(it.q)}><Icon size={16} />{it.label}<span className="hint">↵</span></div>;
           })}
-          {items.length === 0 && <div className="cmd-item" style={{ color: 'var(--text-3)' }}>Ничего не найдено</div>}
+          {q.trim() && <div className="cmd-item" onClick={() => runAsk(q.trim())}><Sparkles size={16} style={{ color: 'var(--ai)' }} />Спросить NEX: «{q.trim()}»</div>}
         </div>
-      </div>
+      </form>
     </div>
   );
 }
 
-/* ===================== Shell ===================== */
+/* ===================== Rail + Shell ===================== */
+function Rail() {
+  const { user, page, query, goHome, setPage, setCmdOpen, setUser } = useApp();
+  if (!user) return null;
+  const onHome = page === 'home' && !query;
+  return (
+    <div className="rail">
+      <div className="brand-mark" onClick={goHome} style={{ cursor: 'pointer' }}>N</div>
+      <button className={`rail-item ${onHome ? 'active' : ''}`} title="Главная" onClick={goHome}><HomeIcon size={19} /></button>
+      <button className="rail-item" title="Команды (⌘K)" onClick={() => setCmdOpen(true)}><CommandIcon size={19} /></button>
+      <div className="rail-spacer" />
+      <button className={`rail-item ${page === 'settings' ? 'active' : ''}`} title="Настройки" onClick={() => setPage('settings')}><SettingsIcon size={19} /></button>
+      <button className="rail-item" title={`${user.name} · выйти`} onClick={() => setUser(null)}><LogOut size={18} /></button>
+    </div>
+  );
+}
+
 function Shell() {
-  const { user, page, setPage, collapsed, setCollapsed, cmdOpen, setCmdOpen, setUser } = useApp();
+  const { user, page, setCmdOpen } = useApp();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setCmdOpen(!cmdOpen); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setCmdOpen(true); }
       if (e.key === 'Escape') setCmdOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [cmdOpen, setCmdOpen]);
+  }, [setCmdOpen]);
 
   if (!user) return null;
-  const title = META[page]?.label || 'NEX';
 
   return (
-    <div className={`shell ${collapsed ? 'collapsed' : ''}`}>
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <div className="brand-mark">N</div>
-          <div className="brand-text"><b>NEX</b><span>КИС Колледж</span></div>
-        </div>
-        <nav className="sidebar-nav">
-          {NAV.map((grp) => {
-            const items = grp.items.filter((id) => META[id].roles.includes(user.role));
-            if (items.length === 0) return null;
-            return (
-              <div className="nav-group" key={grp.title}>
-                <div className="nav-group-title">{grp.title}</div>
-                {items.map((id) => {
-                  const Icon = META[id].icon;
-                  return (
-                    <div key={id} className={`nav-item ${page === id ? 'active' : ''}`} onClick={() => setPage(id)} title={META[id].label}>
-                      <Icon size={17} /><span>{META[id].label}</span>
-                      {id === 'dashboard' && user.role === 'admin' && <span className="nav-badge">3</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </nav>
-        <div className="sidebar-foot">
-          <div className={`nav-item ${page === 'settings' ? 'active' : ''}`} onClick={() => setPage('settings')}>
-            <SettingsIcon size={17} /><span>Настройки</span>
-          </div>
-          <div className="nav-item" onClick={() => setUser(null)}>
-            <div className="avatar">{(user.name[0] || 'U').toUpperCase()}</div>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name} · {roleLabel[user.role]}</span>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <div className="main">
-        <header className="topbar">
-          <button className="icon-btn" onClick={() => setCollapsed(!collapsed)} aria-label="Свернуть меню"><PanelLeft size={18} /></button>
-          <strong style={{ fontSize: 14, fontWeight: 600 }}>{title}</strong>
-          <div className="cmd-trigger" style={{ margin: '0 auto' }} onClick={() => setCmdOpen(true)}>
-            <Search size={15} />Поиск и команды…<span className="kbd">⌘K</span>
-          </div>
-          <button className="icon-btn" onClick={() => setPage('dashboard')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
-        </header>
-        <div className="content">{renderPage(page)}</div>
-      </div>
-
+    <div className="appwrap">
+      <Rail />
+      {page === 'settings'
+        ? <div className="canvas"><div className="canvas-inner"><Settings /></div></div>
+        : <Canvas />}
+      <ContextDrawer />
       <CommandPalette />
     </div>
   );

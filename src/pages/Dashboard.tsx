@@ -21,7 +21,7 @@ function Kpi({ icon, label, value, delta, up }: { icon: ReactNode; label: string
   );
 }
 
-function AdminDashboard() {
+export function SecurityConsole() {
   const { toast } = useApp();
   const flagged = failedLogins.filter((f) => f.flagged).length;
 
@@ -231,5 +231,5 @@ function FocusDashboard() {
 
 export default function Dashboard() {
   const { user } = useApp();
-  return user?.role === 'admin' ? <AdminDashboard /> : <FocusDashboard />;
+  return user?.role === 'admin' ? <SecurityConsole /> : <FocusDashboard />;
 }

@@ -6,7 +6,7 @@ import { students, groups, staff } from '../data';
 const statusTone = (s: string) => (s === 'Обучается' || s === 'Активен' ? 'chip-success' : s === 'Академический отпуск' || s === 'Отпуск' ? 'chip-warn' : 'chip-neutral');
 
 export function Students() {
-  const { setPage, toast } = useApp();
+  const { openStudent, runAsk, toast } = useApp();
   const [q, setQ] = useState('');
   const list = useMemo(
     () => students.filter((s) => `${s.lastname} ${s.firstname} ${s.group}`.toLowerCase().includes(q.toLowerCase())),
@@ -26,7 +26,7 @@ export function Students() {
           title="3 студента в зоне риска"
           desc="Снижение посещаемости и среднего балла в ПИ-21-1 за 2 недели. Список уже отфильтрован сверху."
           confidence={0.92}
-          onAct={() => setPage('attendance')}
+          onAct={() => runAsk('в зоне риска')}
         />
       </div>
 
@@ -50,7 +50,7 @@ export function Students() {
             </thead>
             <tbody>
               {list.map((s) => (
-                <tr key={s.id}>
+                <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => openStudent(s.id)}>
                   <td><div style={{ display: 'flex', alignItems: 'center', gap: 9 }}><Avatar name={`${s.lastname} ${s.firstname}`} /><div><div style={{ fontWeight: 600 }}>{s.lastname} {s.firstname}</div><div className="dim" style={{ fontSize: 12 }}>{s.patronymic}</div></div></div></td>
                   <td className="mono">{s.group}</td>
                   <td>{s.form}</td>

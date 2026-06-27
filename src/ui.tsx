@@ -10,12 +10,19 @@ interface AppCtx {
   setTheme: (t: Theme) => void;
   user: User | null;
   setUser: (u: User | null) => void;
-  page: string;
-  setPage: (p: string) => void;
+  /** Top-level view: the intent canvas ('home') or the settings surface. */
+  page: 'home' | 'settings';
+  setPage: (p: 'home' | 'settings') => void;
+  /** Current intent. Empty string = proactive home; otherwise an answered query. */
+  query: string;
+  runAsk: (q: string) => void;
+  goHome: () => void;
+  /** Focused object (student) for the context drawer. */
+  objStudent: number | null;
+  openStudent: (id: number) => void;
+  closeObject: () => void;
   cmdOpen: boolean;
   setCmdOpen: (v: boolean) => void;
-  collapsed: boolean;
-  setCollapsed: (v: boolean) => void;
   toast: (msg: string) => void;
 }
 
@@ -29,9 +36,10 @@ export const useApp = () => {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('nex-theme') as Theme) || 'light');
   const [user, setUser] = useState<User | null>(null);
-  const [page, setPage] = useState('dashboard');
+  const [page, setPage] = useState<'home' | 'settings'>('home');
+  const [query, setQuery] = useState('');
+  const [objStudent, setObjStudent] = useState<number | null>(null);
   const [cmdOpen, setCmdOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,13 +47,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('nex-theme', theme);
   }, [theme]);
 
+  const runAsk = (q: string) => { setPage('home'); setCmdOpen(false); setQuery(q); };
+  const goHome = () => { setPage('home'); setQuery(''); };
+  const openStudent = (id: number) => setObjStudent(id);
+  const closeObject = () => setObjStudent(null);
+
   const toast = (msg: string) => {
     setToastMsg(msg);
     window.setTimeout(() => setToastMsg(null), 2600);
   };
 
   return (
-    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, cmdOpen, setCmdOpen, collapsed, setCollapsed, toast }}>
+    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, query, runAsk, goHome, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, toast }}>
       {children}
       {toastMsg && <div className="toast fade"><Sparkles size={15} style={{ color: 'var(--ai)' }} />{toastMsg}</div>}
     </Ctx.Provider>
