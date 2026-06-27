@@ -7,6 +7,7 @@ import {
 import { useApp, type User } from './ui';
 import { roleLabel, type Role } from './data';
 import { Canvas, ContextDrawer, INTENTS } from './canvas';
+import { AiLayer } from './ai';
 import Settings from './pages/Settings';
 
 /* ===================== Login ===================== */
@@ -136,16 +137,17 @@ function Rail() {
 }
 
 function Shell() {
-  const { user, page, setCmdOpen } = useApp();
+  const { user, page, setCmdOpen, aiOpen, openAi, closeAi } = useApp();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setCmdOpen(true); }
-      if (e.key === 'Escape') setCmdOpen(false);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'e') { e.preventDefault(); aiOpen ? closeAi() : openAi(); }
+      if (e.key === 'Escape') { setCmdOpen(false); closeAi(); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [setCmdOpen]);
+  }, [setCmdOpen, aiOpen, openAi, closeAi]);
 
   if (!user) return null;
 
@@ -157,6 +159,7 @@ function Shell() {
         : <Canvas />}
       <ContextDrawer />
       <CommandPalette />
+      <AiLayer />
     </div>
   );
 }

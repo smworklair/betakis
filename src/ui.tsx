@@ -23,6 +23,11 @@ interface AppCtx {
   closeObject: () => void;
   cmdOpen: boolean;
   setCmdOpen: (v: boolean) => void;
+  /** Ambient AI layer (Cmd+E): floats over whatever is currently on screen. */
+  aiOpen: boolean;
+  aiSeed: string | null;
+  openAi: (seed?: string) => void;
+  closeAi: () => void;
   toast: (msg: string) => void;
 }
 
@@ -40,6 +45,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [query, setQuery] = useState('');
   const [objStudent, setObjStudent] = useState<number | null>(null);
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiSeed, setAiSeed] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -51,6 +58,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const goHome = () => { setPage('home'); setQuery(''); };
   const openStudent = (id: number) => setObjStudent(id);
   const closeObject = () => setObjStudent(null);
+  const openAi = (seed?: string) => { setAiSeed(seed ?? null); setAiOpen(true); };
+  const closeAi = () => setAiOpen(false);
 
   const toast = (msg: string) => {
     setToastMsg(msg);
@@ -58,7 +67,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, query, runAsk, goHome, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, toast }}>
+    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, query, runAsk, goHome, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, aiOpen, aiSeed, openAi, closeAi, toast }}>
       {children}
       {toastMsg && <div className="toast fade"><Sparkles size={15} style={{ color: 'var(--ai)' }} />{toastMsg}</div>}
     </Ctx.Provider>
