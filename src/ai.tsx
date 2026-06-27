@@ -15,7 +15,13 @@ const groupAvg = (group: string) => {
 
 interface Ctx { kind: 'student' | 'view' | 'settings' | 'home'; title: string; facts: string[]; quick: string[]; sid?: number; }
 
-function buildContext(objStudent: number | null, query: string, page: string, seed: string | null): Ctx {
+const PAGE_TITLES: Record<string, string> = {
+  dashboard: 'Командный центр', students: 'Студенты', groups: 'Группы', admissions: 'Приём',
+  schedule: 'Расписание', journal: 'Журнал', attendance: 'Посещаемость', finance: 'Финансы',
+  scholarship: 'Стипендии', staff: 'Сотрудники', analytics: 'Аналитика', graduation: 'Выпуск', security: 'Безопасность',
+};
+
+function buildContext(objStudent: number | null, page: string, seed: string | null): Ctx {
   if (seed) return { kind: 'view', title: `Выделенный фрагмент`, facts: [], quick: ['Объясни это', 'Что с этим сделать?', 'Найди связанные данные'] };
   if (objStudent != null) {
     const s = students.find((x) => x.id === objStudent);
@@ -31,9 +37,9 @@ function buildContext(objStudent: number | null, query: string, page: string, se
       };
     }
   }
-  if (query) return { kind: 'view', title: `Открыто: «${query}»`, facts: [], quick: ['Сделай сводку', 'Какие действия предложишь?', 'Найди аномалии'] };
   if (page === 'settings') return { kind: 'settings', title: 'Настройки', facts: [], quick: ['Как включить 2FA?', 'Зачем тёмная тема?'] };
-  return { kind: 'home', title: 'Главная · сводка дня', facts: [], quick: ['Что сегодня важно?', 'Покажи риски', 'Состояние безопасности'] };
+  if (page === 'dashboard') return { kind: 'home', title: 'Командный центр', facts: [], quick: ['Что сегодня важно?', 'Покажи риски', 'Состояние безопасности'] };
+  return { kind: 'view', title: `Экран: ${PAGE_TITLES[page] || page}`, facts: [], quick: ['Сделай сводку', 'Какие действия предложишь?', 'Найди аномалии'] };
 }
 
 interface Answer { text: string; action?: string; }
@@ -106,8 +112,8 @@ function SelectionPopover() {
 interface Msg { who: 'u' | 'n'; text: string; action?: string }
 
 function AiPanel() {
-  const { objStudent, query, page, aiSeed, closeAi, toast } = useApp();
-  const ctx = buildContext(objStudent, query, page, aiSeed);
+  const { objStudent, page, aiSeed, closeAi, toast } = useApp();
+  const ctx = buildContext(objStudent, page, aiSeed);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
@@ -121,7 +127,7 @@ function AiPanel() {
       setMsgs([{ who: 'n', text: `Вижу контекст: ${ctx.title}. Чем помочь?` }]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [objStudent, query, page, aiSeed]);
+  }, [objStudent, page, aiSeed]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs]);
 

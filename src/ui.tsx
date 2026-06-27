@@ -10,20 +10,16 @@ interface AppCtx {
   setTheme: (t: Theme) => void;
   user: User | null;
   setUser: (u: User | null) => void;
-  /** Top-level view: the intent canvas ('home') or the settings surface. */
-  page: 'home' | 'settings';
-  setPage: (p: 'home' | 'settings') => void;
-  /** Current intent. Empty string = proactive home; otherwise an answered query. */
-  query: string;
-  runAsk: (q: string) => void;
-  goHome: () => void;
+  /** Conventional, predictable navigation: the current module/page id. */
+  page: string;
+  setPage: (p: string) => void;
   /** Focused object (student) for the context drawer. */
   objStudent: number | null;
   openStudent: (id: number) => void;
   closeObject: () => void;
   cmdOpen: boolean;
   setCmdOpen: (v: boolean) => void;
-  /** Ambient AI layer (Cmd+E): floats over whatever is currently on screen. */
+  /** Ambient, on-demand AI layer (Cmd+E) — secondary, surfaces only when useful. */
   aiOpen: boolean;
   aiSeed: string | null;
   openAi: (seed?: string) => void;
@@ -41,8 +37,7 @@ export const useApp = () => {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('nex-theme') as Theme) || 'light');
   const [user, setUser] = useState<User | null>(null);
-  const [page, setPage] = useState<'home' | 'settings'>('home');
-  const [query, setQuery] = useState('');
+  const [page, setPage] = useState('dashboard');
   const [objStudent, setObjStudent] = useState<number | null>(null);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
@@ -54,8 +49,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('nex-theme', theme);
   }, [theme]);
 
-  const runAsk = (q: string) => { setPage('home'); setCmdOpen(false); setQuery(q); };
-  const goHome = () => { setPage('home'); setQuery(''); };
   const openStudent = (id: number) => setObjStudent(id);
   const closeObject = () => setObjStudent(null);
   const openAi = (seed?: string) => { setAiSeed(seed ?? null); setAiOpen(true); };
@@ -67,7 +60,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, query, runAsk, goHome, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, aiOpen, aiSeed, openAi, closeAi, toast }}>
+    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, aiOpen, aiSeed, openAi, closeAi, toast }}>
       {children}
       {toastMsg && <div className="toast fade"><Sparkles size={15} style={{ color: 'var(--ai)' }} />{toastMsg}</div>}
     </Ctx.Provider>

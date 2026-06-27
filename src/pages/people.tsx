@@ -6,7 +6,7 @@ import { students, groups, staff } from '../data';
 const statusTone = (s: string) => (s === 'Обучается' || s === 'Активен' ? 'chip-success' : s === 'Академический отпуск' || s === 'Отпуск' ? 'chip-warn' : 'chip-neutral');
 
 export function Students() {
-  const { openStudent, runAsk, toast } = useApp();
+  const { openStudent, setPage, toast } = useApp();
   const [q, setQ] = useState('');
   const list = useMemo(
     () => students.filter((s) => `${s.lastname} ${s.firstname} ${s.group}`.toLowerCase().includes(q.toLowerCase())),
@@ -26,7 +26,7 @@ export function Students() {
           title="3 студента в зоне риска"
           desc="Снижение посещаемости и среднего балла в ПИ-21-1 за 2 недели. Список уже отфильтрован сверху."
           confidence={0.92}
-          onAct={() => runAsk('в зоне риска')}
+          onAct={() => setPage('attendance')}
         />
       </div>
 

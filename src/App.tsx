@@ -1,14 +1,72 @@
-import { useState, useEffect, useMemo, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, type ReactNode, type FormEvent } from 'react';
 import {
-  Home as HomeIcon, Command as CommandIcon, Settings as SettingsIcon, LogOut,
-  Sparkles, ShieldCheck, BookOpen, Wallet, GraduationCap, Lock, User as UserIcon, ArrowRight,
+  LayoutDashboard, Users, School, ClipboardList, Calendar, BookOpen, CheckSquare,
+  Wallet, Award, Briefcase, BarChart3, GraduationCap, ShieldCheck, Settings as SettingsIcon,
+  Search, Bell, PanelLeft, Sparkles, Lock, User as UserIcon, ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
 import { useApp, type User } from './ui';
 import { roleLabel, type Role } from './data';
-import { Canvas, ContextDrawer, INTENTS } from './canvas';
+import { ContextDrawer } from './blocks';
 import { AiLayer } from './ai';
+
+import CommandCenter from './pages/CommandCenter';
+import { SecurityConsole } from './pages/Dashboard';
+import { Students, Groups, Staff } from './pages/people';
+import { Schedule, Journal, Attendance } from './pages/academic';
+import { Admissions, Finance, Scholarship } from './pages/operations';
+import { Analytics, Graduation } from './pages/insights';
 import Settings from './pages/Settings';
+
+interface Meta { label: string; icon: LucideIcon; roles: Role[]; }
+const ALL: Role[] = ['admin', 'teacher', 'accountant', 'student'];
+
+const META: Record<string, Meta> = {
+  dashboard: { label: 'Командный центр', icon: LayoutDashboard, roles: ALL },
+  students: { label: 'Студенты', icon: Users, roles: ['admin', 'teacher', 'accountant'] },
+  groups: { label: 'Группы', icon: School, roles: ['admin', 'teacher'] },
+  admissions: { label: 'Приём', icon: ClipboardList, roles: ['admin'] },
+  schedule: { label: 'Расписание', icon: Calendar, roles: ['admin', 'teacher', 'student'] },
+  journal: { label: 'Журнал', icon: BookOpen, roles: ['admin', 'teacher', 'student'] },
+  attendance: { label: 'Посещаемость', icon: CheckSquare, roles: ['admin', 'teacher', 'student'] },
+  finance: { label: 'Финансы', icon: Wallet, roles: ['admin', 'accountant', 'student'] },
+  scholarship: { label: 'Стипендии', icon: Award, roles: ['admin', 'accountant'] },
+  staff: { label: 'Сотрудники', icon: Briefcase, roles: ['admin'] },
+  analytics: { label: 'Аналитика', icon: BarChart3, roles: ['admin', 'teacher', 'accountant'] },
+  graduation: { label: 'Выпуск', icon: GraduationCap, roles: ['admin', 'teacher'] },
+  security: { label: 'Безопасность', icon: ShieldCheck, roles: ['admin'] },
+  settings: { label: 'Настройки', icon: SettingsIcon, roles: ALL },
+};
+
+const NAV: { title: string; items: string[] }[] = [
+  { title: 'Обзор', items: ['dashboard'] },
+  { title: 'Обучающиеся', items: ['students', 'groups', 'admissions'] },
+  { title: 'Учебный процесс', items: ['schedule', 'journal', 'attendance'] },
+  { title: 'Финансы', items: ['finance', 'scholarship'] },
+  { title: 'Персонал', items: ['staff'] },
+  { title: 'Аналитика', items: ['analytics', 'graduation'] },
+  { title: 'Безопасность', items: ['security'] },
+];
+
+function renderPage(id: string): ReactNode {
+  switch (id) {
+    case 'dashboard': return <CommandCenter />;
+    case 'security': return <SecurityConsole />;
+    case 'students': return <Students />;
+    case 'groups': return <Groups />;
+    case 'admissions': return <Admissions />;
+    case 'schedule': return <Schedule />;
+    case 'journal': return <Journal />;
+    case 'attendance': return <Attendance />;
+    case 'finance': return <Finance />;
+    case 'scholarship': return <Scholarship />;
+    case 'staff': return <Staff />;
+    case 'analytics': return <Analytics />;
+    case 'graduation': return <Graduation />;
+    case 'settings': return <Settings />;
+    default: return <CommandCenter />;
+  }
+}
 
 /* ===================== Login ===================== */
 const ROLE_OPTS: { role: Role; icon: LucideIcon; hint: string }[] = [
@@ -19,7 +77,7 @@ const ROLE_OPTS: { role: Role; icon: LucideIcon; hint: string }[] = [
 ];
 
 function Login() {
-  const { setUser, goHome } = useApp();
+  const { setUser, setPage } = useApp();
   const [role, setRole] = useState<Role>('admin');
   const [name, setName] = useState('');
   const [pass, setPass] = useState('');
@@ -29,7 +87,7 @@ function Login() {
     e.preventDefault();
     if (!name.trim()) { setErr('Введите имя'); return; }
     if (pass !== '0000') { setErr('Неверный пароль (для демо: 0000)'); return; }
-    goHome();
+    setPage('dashboard');
     setUser({ name: name.trim(), role } as User);
   };
 
@@ -39,9 +97,9 @@ function Login() {
         <div className="brand-mark" style={{ width: 36, height: 36, fontSize: 18 }}>N</div>
         <div>
           <div className="lead">Корпоративная платформа, рождённая в эпоху ИИ.</div>
-          <div className="sub">Здесь нет меню модулей и чат-бота. Вы описываете задачу — NEX сам находит данные, действия и подсказывает следующий шаг.</div>
+          <div className="sub">Обычный, предсказуемый интерфейс — но интеллект встроен в каждый процесс: следит за контекстом, ловит аномалии, берёт на себя рутину и подсказывает действия. Невидимый интеллект, а не видимый ИИ.</div>
           <div style={{ marginTop: 26 }}>
-            <div className="login-feat"><span className="ico"><Sparkles size={15} /></span>Интерфейс собирается вокруг вашего намерения</div>
+            <div className="login-feat"><span className="ico"><Sparkles size={15} /></span>Помощь появляется только когда есть реальная польза</div>
             <div className="login-feat"><span className="ico"><ShieldCheck size={15} /></span>Аудит, сессии и контроль доступа из коробки</div>
           </div>
         </div>
@@ -88,56 +146,39 @@ function Login() {
   );
 }
 
-/* ===================== Command palette (secondary discoverability map) ===================== */
+/* ===================== Command palette (quick, predictable navigation) ===================== */
 function CommandPalette() {
-  const { cmdOpen, setCmdOpen, runAsk, user } = useApp();
+  const { cmdOpen, setCmdOpen, setPage, user } = useApp();
   const [q, setQ] = useState('');
   const items = useMemo(() => {
-    const list = INTENTS.filter((i) => user && i.roles.includes(user.role));
-    return list.filter((x) => x.label.toLowerCase().includes(q.toLowerCase()) || x.q.includes(q.toLowerCase()));
+    const ids = Object.keys(META).filter((id) => user && META[id].roles.includes(user.role));
+    return ids.map((id) => ({ id, label: META[id].label })).filter((x) => x.label.toLowerCase().includes(q.toLowerCase()));
   }, [q, user]);
 
   useEffect(() => { if (!cmdOpen) setQ(''); }, [cmdOpen]);
   if (!cmdOpen) return null;
-
-  const submit = (e: FormEvent) => { e.preventDefault(); if (q.trim()) runAsk(q.trim()); };
+  const go = (id: string) => { setPage(id); setCmdOpen(false); };
 
   return (
     <div className="cmd-overlay" onClick={() => setCmdOpen(false)}>
-      <form className="cmd-modal" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
-        <input className="cmd-input" autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Спросите или дайте команду…" />
+      <div className="cmd-modal" onClick={(e) => e.stopPropagation()}>
+        <input className="cmd-input" autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Перейти к разделу…" />
         <div className="cmd-list">
-          <div className="cmd-section">Разделы и интенты</div>
+          <div className="cmd-section">Разделы</div>
           {items.map((it) => {
-            const Icon = it.icon;
-            return <div className="cmd-item" key={it.q} onClick={() => runAsk(it.q)}><Icon size={16} />{it.label}<span className="hint">↵</span></div>;
+            const Icon = META[it.id].icon;
+            return <div className="cmd-item" key={it.id} onClick={() => go(it.id)}><Icon size={16} />{it.label}<span className="hint">↵</span></div>;
           })}
-          {q.trim() && <div className="cmd-item" onClick={() => runAsk(q.trim())}><Sparkles size={16} style={{ color: 'var(--ai)' }} />Спросить NEX: «{q.trim()}»</div>}
+          {items.length === 0 && <div className="cmd-item dim">Ничего не найдено</div>}
         </div>
-      </form>
+      </div>
     </div>
   );
 }
 
-/* ===================== Rail + Shell ===================== */
-function Rail() {
-  const { user, page, query, goHome, setPage, setCmdOpen, setUser } = useApp();
-  if (!user) return null;
-  const onHome = page === 'home' && !query;
-  return (
-    <div className="rail">
-      <div className="brand-mark" onClick={goHome} style={{ cursor: 'pointer' }}>N</div>
-      <button className={`rail-item ${onHome ? 'active' : ''}`} title="Главная" onClick={goHome}><HomeIcon size={19} /></button>
-      <button className="rail-item" title="Команды (⌘K)" onClick={() => setCmdOpen(true)}><CommandIcon size={19} /></button>
-      <div className="rail-spacer" />
-      <button className={`rail-item ${page === 'settings' ? 'active' : ''}`} title="Настройки" onClick={() => setPage('settings')}><SettingsIcon size={19} /></button>
-      <button className="rail-item" title={`${user.name} · выйти`} onClick={() => setUser(null)}><LogOut size={18} /></button>
-    </div>
-  );
-}
-
+/* ===================== Shell ===================== */
 function Shell() {
-  const { user, page, setCmdOpen, aiOpen, openAi, closeAi } = useApp();
+  const { user, page, setPage, cmdOpen, setCmdOpen, aiOpen, openAi, closeAi } = useApp();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -150,13 +191,54 @@ function Shell() {
   }, [setCmdOpen, aiOpen, openAi, closeAi]);
 
   if (!user) return null;
+  const title = META[page]?.label || 'NEX';
 
   return (
-    <div className="appwrap">
-      <Rail />
-      {page === 'settings'
-        ? <div className="canvas"><div className="canvas-inner"><Settings /></div></div>
-        : <Canvas />}
+    <div className="shell">
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <div className="brand-mark">N</div>
+          <div className="brand-text"><b>NEX</b><span>КИС Колледж</span></div>
+        </div>
+        <nav className="sidebar-nav">
+          {NAV.map((grp) => {
+            const items = grp.items.filter((id) => META[id].roles.includes(user.role));
+            if (items.length === 0) return null;
+            return (
+              <div className="nav-group" key={grp.title}>
+                <div className="nav-group-title">{grp.title}</div>
+                {items.map((id) => {
+                  const Icon = META[id].icon;
+                  return (
+                    <div key={id} className={`nav-item ${page === id ? 'active' : ''}`} onClick={() => setPage(id)} title={META[id].label}>
+                      <Icon size={17} /><span>{META[id].label}</span>
+                      {id === 'security' && user.role === 'admin' && <span className="nav-badge">2</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </nav>
+        <div className="sidebar-foot">
+          <div className={`nav-item ${page === 'settings' ? 'active' : ''}`} onClick={() => setPage('settings')}>
+            <SettingsIcon size={17} /><span>Настройки</span>
+          </div>
+        </div>
+      </aside>
+
+      <div className="main">
+        <header className="topbar">
+          <strong style={{ fontSize: 14, fontWeight: 600 }}>{title}</strong>
+          <div className="cmd-trigger" style={{ margin: '0 auto' }} onClick={() => setCmdOpen(true)}>
+            <Search size={15} />Перейти к разделу…<span className="kbd">⌘K</span>
+          </div>
+          <button className="icon-btn" onClick={() => setPage('dashboard')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
+          <div className="avatar" title={`${user.name} · ${roleLabel[user.role]}`}>{(user.name[0] || 'U').toUpperCase()}</div>
+        </header>
+        <div className="content">{renderPage(page)}</div>
+      </div>
+
       <ContextDrawer />
       <CommandPalette />
       <AiLayer />
