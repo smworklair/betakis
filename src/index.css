@@ -387,6 +387,7 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; }
 .drawer-overlay { position: fixed; inset: 0; background: rgba(10,10,11,.45); backdrop-filter: blur(2px); z-index: 150; display: flex; justify-content: flex-end; }
 .drawer { width: 460px; max-width: 92vw; background: var(--surface); border-left: 1px solid var(--border-2); height: 100%; overflow-y: auto; box-shadow: var(--shadow-md); animation: slideIn .2s ease-out; }
 @keyframes slideIn { from { transform: translateX(30px); opacity: .6; } to { transform: none; opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .drawer-head { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 12px; }
 .drawer-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 18px; }
 .obj-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
@@ -407,12 +408,32 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; }
 .nex-ask .kbd { margin-left: auto; opacity: .8; }
 .nex-ask:hover .kbd, .nex-ask.active .kbd { background: rgba(255,255,255,.22); color: #fff; }
 
-/* topbar Ask-NEX bar (GitHub-Copilot-style) */
-.ask-bar { flex: 1; max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 9px; height: 36px; padding: 0 12px; border: 1px solid var(--border-2); border-radius: 999px; background: var(--bg); color: var(--text-3); font-size: 13px; cursor: pointer; text-align: left; }
-.ask-bar:hover { border-color: var(--ai); color: var(--text-2); }
+/* topbar NEX omni: search + ask in one mini-window */
+.omni { position: relative; flex: 1; max-width: 560px; margin: 0 auto; }
+.ask-bar { display: flex; align-items: center; gap: 9px; height: 36px; padding: 0 12px; border: 1px solid var(--border-2); border-radius: 999px; background: var(--bg); cursor: text; }
+.ask-bar:hover, .ask-bar.on { border-color: var(--ai); }
+.ask-bar.on { box-shadow: 0 0 0 3px var(--ai-weak); }
 .ask-bar .spark { color: var(--ai); flex-shrink: 0; }
-.ask-bar span:first-of-type { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ask-bar .kbd { margin-left: auto; }
+.ask-bar input { flex: 1; border: none; outline: none; background: transparent; color: var(--text); font-size: 13px; }
+.ask-bar input::placeholder { color: var(--text-3); }
+.omni-pop { position: absolute; top: 44px; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--r-lg); box-shadow: var(--shadow-md); z-index: 300; padding: 6px; max-height: 70vh; overflow-y: auto; animation: fadeIn .12s ease-out; }
+.omni-pop .cmd-section { padding: 8px 12px 4px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); }
+.omni-pop .cmd-item { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 9px; cursor: pointer; font-size: 13.5px; color: var(--text); }
+.omni-pop .cmd-item:hover { background: var(--surface-2); }
+.omni-pop .cmd-item.dim { color: var(--text-3); cursor: default; }
+.omni-pop .cmd-item.dim:hover { background: transparent; }
+
+/* GitHub-home-style AI hero atop the command center */
+.ask-hero { margin-bottom: 20px; }
+.ask-hero-greet { font-size: 19px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 12px; }
+.ask-hero-box { display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 8px 0 14px; border: 1px solid var(--border-2); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-sm); }
+.ask-hero-box:focus-within { border-color: var(--ai); box-shadow: 0 0 0 3px var(--ai-weak); }
+.ask-hero-box .lead { color: var(--ai); flex-shrink: 0; }
+.ask-hero-box input { flex: 1; border: none; outline: none; background: transparent; color: var(--text); font-size: 14.5px; }
+.ask-hero-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.hero-chip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; }
+.hero-chip:hover { border-color: var(--ai); color: var(--ai); }
+.hero-chip svg { color: var(--ai); }
 
 /* escalate from mini-panel to full chat */
 .ai-escalate { border-top: 1px solid var(--border); padding: 11px 14px; background: var(--surface-2); color: var(--ai); font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; border-left: none; border-right: none; border-bottom: none; }

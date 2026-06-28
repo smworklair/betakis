@@ -3,7 +3,7 @@ import {
   Sparkles, ShieldAlert, Wallet, Users, CalendarCheck, FileText, AlertTriangle, LogIn,
   Monitor, TrendingUp, TrendingDown, CheckCircle2, ArrowRight, Activity, ShieldCheck, BookOpen,
 } from 'lucide-react';
-import { useApp, Chip, Avatar, Sparkline, NexAsk, severityTone, severityLabel } from '../ui';
+import { useApp, Chip, Avatar, Sparkline, NexAsk, AskHero, severityTone, severityLabel } from '../ui';
 import { AtRiskList } from '../blocks';
 import { Donut, Bars, Line, Legend, type Segment } from '../charts';
 import {
@@ -75,6 +75,8 @@ function AdminCenter() {
   const { setPage, toast } = useApp();
   return (
     <div className="fade content-narrow">
+      <AskHero />
+
       {/* what changed since last session */}
       <div className="ai-card" style={{ marginBottom: 18 }}>
         <div className="ai-head"><Sparkles size={14} /> Сводка с прошлого входа</div>
@@ -183,6 +185,8 @@ function RoleCenter() {
   const isAcc = user?.role === 'accountant';
   return (
     <div className="fade content-narrow">
+      <AskHero />
+
       <div className="ai-card" style={{ marginBottom: 18 }}>
         <div className="ai-head"><Sparkles size={14} /> Сводка с прошлого входа</div>
         <div className="ai-body">

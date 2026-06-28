@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo, type ReactNode, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useState, useEffect, useMemo, useRef, type ReactNode, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
   LayoutDashboard, Users, School, ClipboardList, Calendar, BookOpen, CheckSquare,
   Wallet, Award, Briefcase, BarChart3, GraduationCap, ShieldCheck, Settings as SettingsIcon,
-  Search, Bell, PanelLeft, Sparkles, Lock, User as UserIcon, ArrowRight,
+  Bell, Sparkles, Lock, User as UserIcon, ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
 import { useApp, type User } from './ui';
@@ -149,70 +149,85 @@ function Login() {
   );
 }
 
-/* ===================== Command palette (quick, predictable navigation) ===================== */
-function CommandPalette() {
-  const { cmdOpen, setCmdOpen, setPage, openChat, user } = useApp();
+/* ===================== Topbar NEX mini-window (search + ask, in one) ===================== */
+function NexOmni() {
+  const { setPage, openChat, user } = useApp();
+  const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
-  const items = useMemo(() => {
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => { if (!wrapRef.current?.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, []);
+
+  const sections = useMemo(() => {
     const ids = Object.keys(META).filter((id) => id !== 'chat' && user && META[id].roles.includes(user.role));
     return ids.map((id) => ({ id, label: META[id].label })).filter((x) => x.label.toLowerCase().includes(q.toLowerCase()));
   }, [q, user]);
 
-  useEffect(() => { if (!cmdOpen) setQ(''); }, [cmdOpen]);
-  if (!cmdOpen) return null;
-  const go = (id: string) => { setPage(id); setCmdOpen(false); };
-  const ask = () => { openChat(q.trim() || undefined); setCmdOpen(false); };
+  const suggestions = [
+    'Что сегодня важно?',
+    'Студенты в зоне риска и почему',
+    'Что с финансами и задолженностью?',
+    'Состояние безопасности',
+  ];
 
-  // Enter: if a section matches, jump to it; otherwise hand the query to NEX.
+  const close = () => { setOpen(false); setQ(''); };
+  const go = (id: string) => { setPage(id); close(); };
+  const ask = (text?: string) => { openChat((text ?? q).trim() || undefined); close(); };
   const onKey = (e: ReactKeyboardEvent) => {
+    if (e.key === 'Escape') { setOpen(false); return; }
     if (e.key !== 'Enter') return;
     e.preventDefault();
-    if (items.length > 0) go(items[0].id); else ask();
+    if (sections.length > 0) go(sections[0].id); else ask();
   };
 
   const hasQuery = q.trim().length > 0;
 
   return (
-    <div className="cmd-overlay" onClick={() => setCmdOpen(false)}>
-      <div className="cmd-modal" onClick={(e) => e.stopPropagation()}>
-        <input className="cmd-input" autoFocus value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKey} placeholder="Перейти к разделу или спросить NEX…" />
-        <div className="cmd-list">
-          {/* NEX is a native option in the same surface — not a separate place */}
-          <div className="cmd-ask" onClick={ask}>
+    <div className="omni" ref={wrapRef}>
+      <div className={`ask-bar ${open ? 'on' : ''}`} onClick={() => setOpen(true)}>
+        <Sparkles size={15} className="spark" />
+        <input value={q} onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onKeyDown={onKey} placeholder="Спросить NEX — что угодно об организации…" />
+      </div>
+
+      {open && (
+        <div className="omni-pop">
+          {/* NEX as a native option in the same surface */}
+          <div className="cmd-ask" onClick={() => ask()}>
             <span className="ic"><Sparkles size={17} /></span>
             <span className="tx">
               <b>{hasQuery ? `Спросить NEX: «${q.trim()}»` : 'Открыть чат NEX'}</b>
-              <span>{hasQuery ? 'ответит по данным и откроет нужный раздел' : 'полноценная альтернатива навигации'}</span>
+              <span>{hasQuery ? 'ответит по данным и откроет нужный экран' : 'опишите задачу своими словами'}</span>
             </span>
-            <span className="hint">↵</span>
           </div>
 
+          {!hasQuery && (
+            <>
+              <div className="cmd-section">Подсказки</div>
+              {suggestions.map((s) => (
+                <div className="cmd-item" key={s} onClick={() => ask(s)}><Sparkles size={15} style={{ color: 'var(--ai)' }} />{s}</div>
+              ))}
+            </>
+          )}
+
           <div className="cmd-section">Разделы</div>
-          {items.map((it) => {
+          {sections.slice(0, hasQuery ? 8 : 5).map((it) => {
             const Icon = META[it.id].icon;
-            return <div className="cmd-item" key={it.id} onClick={() => go(it.id)}><Icon size={16} />{it.label}<span className="hint">↵</span></div>;
+            return <div className="cmd-item" key={it.id} onClick={() => go(it.id)}><Icon size={16} />{it.label}</div>;
           })}
-          {items.length === 0 && hasQuery && <div className="cmd-item dim">Раздел не найден — нажмите Enter, чтобы спросить NEX</div>}
+          {sections.length === 0 && <div className="cmd-item dim">Раздел не найден — Enter, чтобы спросить NEX</div>}
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
 /* ===================== Shell ===================== */
 function Shell() {
-  const { user, page, setPage, cmdOpen, setCmdOpen, aiOpen, openAi, closeAi, openChat } = useApp();
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setCmdOpen(true); }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') { e.preventDefault(); openChat(); }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'e') { e.preventDefault(); aiOpen ? closeAi() : openAi(); }
-      if (e.key === 'Escape') { setCmdOpen(false); closeAi(); }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [setCmdOpen, aiOpen, openAi, closeAi, openChat]);
+  const { user, page, setPage } = useApp();
 
   if (!user) return null;
   const title = META[page]?.label || 'NEX';
@@ -224,9 +239,6 @@ function Shell() {
           <div className="brand-mark">N</div>
           <div className="brand-text"><b>NEX</b><span>КИС Колледж</span></div>
         </div>
-        <button className={`nex-ask ${page === 'chat' ? 'active' : ''}`} onClick={() => openChat()}>
-          <Sparkles size={16} /><span>Спросить NEX</span><span className="kbd">⌘J</span>
-        </button>
         <nav className="sidebar-nav">
           {NAV.map((grp) => {
             const items = grp.items.filter((id) => META[id].roles.includes(user.role));
@@ -257,10 +269,7 @@ function Shell() {
       <div className="main">
         <header className="topbar">
           <strong style={{ fontSize: 14, fontWeight: 600 }}>{title}</strong>
-          <button className="ask-bar" onClick={() => openChat()}>
-            <Sparkles size={15} className="spark" /><span>Спросить NEX — что угодно об организации…</span><span className="kbd">⌘J</span>
-          </button>
-          <button className="icon-btn" onClick={() => setCmdOpen(true)} title="Перейти к разделу (⌘K)" aria-label="Поиск раздела"><Search size={18} /></button>
+          <NexOmni />
           <button className="icon-btn" onClick={() => setPage('dashboard')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
           <div className="avatar" title={`${user.name} · ${roleLabel[user.role]}`}>{(user.name[0] || 'U').toUpperCase()}</div>
         </header>
@@ -268,7 +277,6 @@ function Shell() {
       </div>
 
       <ContextDrawer />
-      <CommandPalette />
       <AiLayer />
     </div>
   );
