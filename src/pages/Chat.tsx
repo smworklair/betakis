@@ -164,12 +164,7 @@ export default function Chat() {
           <div className="chat-thread">
             <div className="chat-thread-inner">
               {chatLog.map((m, i) => m.who === 'u' ? (
-                <div className="chat-row u" key={i}>
-                  <div className="chat-msg u">{m.text}</div>
-                  <div className="msg-tools u">
-                    <button title="Ветка в новом чате" onClick={() => branch(m.text)}><GitBranch size={13} /></button>
-                  </div>
-                </div>
+                <div className="chat-msg u" key={i}>{m.text}</div>
               ) : (
                 <div className="chat-msg n" key={i}>
                   <div className="ava"><Sparkles size={15} /></div>
