@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { Sparkles } from 'lucide-react';
+import { createContext, useContext, useState, useEffect, type ReactNode, type FormEvent } from 'react';
+import { Sparkles, ArrowUp, AlertTriangle, Wallet, ShieldCheck, BarChart3, Calendar } from 'lucide-react';
 import type { Role, Severity } from './data';
 import type { NexReply } from './nexbrain';
 
@@ -102,6 +102,37 @@ export function NexAsk({ q, label = 'Спросить NEX', subtle = true }: { q
     <button className={`nex-ask-chip ${subtle ? 'subtle' : ''}`} onClick={(e) => { e.stopPropagation(); openChat(q); }} title="Открыть в чате NEX">
       <Sparkles size={12} /> {label}
     </button>
+  );
+}
+
+/** GitHub-home-style AI entry: a prominent ask box + quick-intent chips.
+    The command center is rebuilt around this — NEX is the way in, not a widget. */
+export function AskHero() {
+  const { openChat, user } = useApp();
+  const [q, setQ] = useState('');
+  const submit = (e: FormEvent) => { e.preventDefault(); openChat(q.trim() || undefined); };
+  const chips = [
+    { icon: Sparkles, label: 'Сводка дня', q: 'Что сегодня важно?' },
+    { icon: AlertTriangle, label: 'Кто в зоне риска', q: 'Покажи студентов в зоне риска и почему' },
+    { icon: Wallet, label: 'Финансы', q: 'Что с финансами и задолженностью?' },
+    { icon: ShieldCheck, label: 'Безопасность', q: 'Состояние безопасности' },
+    { icon: BarChart3, label: 'Аналитика', q: 'Сделай сводку по успеваемости' },
+    { icon: Calendar, label: 'Расписание', q: 'Покажи окна в расписании' },
+  ];
+  return (
+    <div className="ask-hero">
+      <div className="ask-hero-greet">Здравствуйте, {user?.name?.split(' ')[0] || 'коллега'}. Чем NEX может помочь?</div>
+      <form className="ask-hero-box" onSubmit={submit}>
+        <Sparkles size={18} className="lead" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Спросите NEX или опишите задачу — он ответит и при необходимости откроет нужный экран…" />
+        <button className="ask-send" type="submit" aria-label="Спросить"><ArrowUp size={18} /></button>
+      </form>
+      <div className="ask-hero-chips">
+        {chips.map((c) => { const Icon = c.icon; return (
+          <button key={c.label} className="hero-chip" onClick={() => openChat(c.q)}><Icon size={14} />{c.label}</button>
+        ); })}
+      </div>
+    </div>
   );
 }
 

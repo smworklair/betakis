@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Sparkles, ShieldCheck, AlertTriangle } from 'lucide-react';
-import { PageHead, Chip } from '../ui';
+import { PageHead, Chip, NexAsk } from '../ui';
 import { groups, students, subjectsByGroup, gradesFor, scheduleDays, scheduleSlots } from '../data';
 
 function GroupSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -20,6 +20,7 @@ export function Schedule() {
       <div className="ai-card" style={{ marginBottom: 16, borderLeftColor: 'var(--success)' }}>
         <div className="ai-head" style={{ color: 'var(--success)' }}><ShieldCheck size={14} /> Проверка расписания</div>
         <div className="ai-body">Конфликтов не найдено: преподаватели и аудитории не пересекаются. Найдено свободное окно — <b>Пн 12:00, ауд. 305</b> — можно перенести «Сети».</div>
+        <div className="ai-actions"><NexAsk q={`Предложи оптимизацию расписания группы ${group} и как заполнить свободные окна`} label="Оптимизировать" subtle={false} /></div>
       </div>
 
       <div className="card">
@@ -57,6 +58,7 @@ export function Journal() {
       <div className="ai-card" style={{ marginBottom: 16 }}>
         <div className="ai-head"><Sparkles size={14} /> Подсказка NEX</div>
         <div className="ai-body">У <b>Сидорова Д.</b> две неудовлетворительные подряд — стоит обратить внимание. Пропуски отмечены как «—».</div>
+        <div className="ai-actions"><NexAsk q={`Кому в группе ${group} нужна помощь по успеваемости и что предпринять?`} label="Кому нужна помощь" subtle={false} /></div>
       </div>
 
       <div className="card">
@@ -98,6 +100,7 @@ export function Attendance() {
       <div className="ai-card" style={{ marginBottom: 16, borderLeftColor: 'var(--warn)' }}>
         <div className="ai-head" style={{ color: 'var(--warn)' }}><AlertTriangle size={14} /> Раннее предупреждение</div>
         <div className="ai-body">У 2 студентов посещаемость опустилась ниже 70% — высокий риск задолженности. Они помечены ниже.</div>
+        <div className="ai-actions"><NexAsk q={`Составь план работы с прогульщиками в группе ${group}`} label="План действий" subtle={false} /></div>
       </div>
 
       <div className="card">
