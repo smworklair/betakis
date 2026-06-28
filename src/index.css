@@ -844,7 +844,9 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; }
   /* selection explainer becomes a bottom sheet */
   .sel-explain { left: 0 !important; right: 0; top: auto !important; bottom: 0; width: 100% !important; border-radius: 16px 16px 0 0; }
 
-  /* messenger stacks: show conversation, list scrolls above */
-  .msgr { grid-template-columns: 1fr; min-height: 0; }
-  .msgr-list { max-height: 220px; overflow-y: auto; }
+  /* messenger: master-detail — list OR conversation, full and smooth */
+  .msgr-mobile { padding: 0; overflow: hidden; }
+  .msgr-mobile .msgr-list { border-right: none; }
+  .msgr-mobile.conv { display: flex; }
+  .msgr-mobile .msgr-conv { width: 100%; height: calc(100dvh - 250px); min-height: 360px; }
 }
