@@ -5,7 +5,7 @@ import type { NexReply } from './nexbrain';
 
 export type Theme = 'light' | 'dark';
 export interface User { name: string; role: Role; }
-export interface ChatMsg extends Partial<NexReply> { who: 'u' | 'n'; text: string; }
+export interface ChatMsg extends Partial<NexReply> { who: 'u' | 'n'; text: string; run?: string; }
 /** Floating context-less explainer, anchored to a text selection. */
 export interface ExplainReq { x: number; y: number; text: string; }
 
@@ -123,7 +123,7 @@ export function NexAsk({ q, label = 'Спросить NEX', subtle = true }: { q
       onClick={(e) => {
         e.stopPropagation();
         const el = e.currentTarget as HTMLElement;
-        const host = (el.closest('.ai-card, .card, .fade') as HTMLElement) || el.parentElement;
+        const host = (el.closest('.nex-strip, .ai-card, .card, .fade') as HTMLElement) || el.parentElement;
         openInlineAt(host, q, label);
       }}>
       <Sparkles size={12} /> {label}
