@@ -3,7 +3,7 @@ import { PageHead, Chip, Avatar, Soon, useApp } from '../ui';
 import { roleLabel } from '../data';
 
 export default function Settings() {
-  const { theme, setTheme, user, setUser, sidebarEnabled, setSidebarEnabled, openAi, toast } = useApp();
+  const { theme, setTheme, user, setUser, sidebarEnabled, setSidebarEnabled, openDock, toast } = useApp();
   return (
     <div className="fade content-narrow" style={{ maxWidth: 760 }}>
       <PageHead title="Настройки" sub="Профиль, оформление и безопасность" />
@@ -51,10 +51,10 @@ export default function Settings() {
         </div>
         <div className="card-body" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, borderTop: '1px solid var(--border)' }}>
           <div>
-            <div style={{ fontWeight: 600 }}>Пространство NEX</div>
-            <div className="muted" style={{ fontSize: 13 }}>Мини-пространство ИИ прямо на странице — открывается кнопкой <Sparkles size={12} style={{ color: 'var(--ai)', verticalAlign: 'middle' }} /> вверху, рядом с любым экраном.</div>
+            <div style={{ fontWeight: 600 }}>Панель NEX</div>
+            <div className="muted" style={{ fontSize: 13 }}>Открывается кнопкой <Sparkles size={12} style={{ color: 'var(--ai)', verticalAlign: 'middle' }} /> вверху и встраивается в страницу справа — раздвигает её и работает вместе с контекстом экрана.</div>
           </div>
-          <button className="btn btn-sm btn-primary" onClick={() => openAi()}><Sparkles size={14} />Открыть</button>
+          <button className="btn btn-sm btn-primary" onClick={() => openDock()}><Sparkles size={14} />Открыть</button>
         </div>
       </div>
 

@@ -1,17 +1,19 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
-import { Sparkles, X, ArrowUp, ArrowRight, Quote, Maximize2, Minimize2, ExternalLink } from 'lucide-react';
+import { Sparkles, X, ArrowUp, ArrowRight, Quote, ExternalLink } from 'lucide-react';
 import { useApp, Chip } from './ui';
 import { students, finance } from './data';
 import { nexReply, attendanceRate, avgGrade, PAGE_TITLES } from './nexbrain';
 
-/* The mini-panel (Cmd+E) is deliberately NARROW: it works on the current
-   screen or the focused object. For anything broader, it hands off to the
-   full conversational page. */
+/* ============================================================
+   Two AI surfaces:
+   1) DockPanel — opens INSIDE the page, splits it and works WITH it.
+   2) SelExplain — a small floating, context-LESS explainer that
+      only appears when you select text.
+   ============================================================ */
 
-interface Ctx { kind: 'student' | 'view' | 'settings' | 'home'; title: string; facts: string[]; quick: string[]; sid?: number; }
+interface Ctx { title: string; facts: string[]; quick: string[]; sid?: number; }
 
-function buildContext(objStudent: number | null, page: string, seed: string | null): Ctx {
-  if (seed) return { kind: 'view', title: 'Выделенный фрагмент', facts: [], quick: ['Объясни это', 'Что с этим сделать?'] };
+function buildContext(objStudent: number | null, page: string): Ctx {
   if (objStudent != null) {
     const s = students.find((x) => x.id === objStudent);
     if (s) {
@@ -19,30 +21,111 @@ function buildContext(objStudent: number | null, page: string, seed: string | nu
       const avg = avgGrade(s.id, s.group);
       const debt = finance.payments.some((p) => p.student.startsWith(s.lastname) && p.status !== 'Оплачено');
       return {
-        kind: 'student', sid: s.id,
+        sid: s.id,
         title: `${s.lastname} ${s.firstname} · ${s.group}`,
         facts: [`Ср. балл ${avg.toFixed(1)}`, `Посещ. ${rate}%`, debt ? 'Есть долг' : 'Оплата ок'],
         quick: ['Почему в зоне риска?', 'Сравни с группой', 'Что предпринять?', 'Сформируй справку'],
       };
     }
   }
-  if (page === 'settings') return { kind: 'settings', title: 'Настройки', facts: [], quick: ['Как включить 2FA?', 'Зачем тёмная тема?'] };
-  if (page === 'dashboard') return { kind: 'home', title: 'Командный центр', facts: [], quick: ['Что на этом экране важно?', 'Покажи риски'] };
-  return { kind: 'view', title: `Экран: ${PAGE_TITLES[page] || page}`, facts: [], quick: ['Сделай сводку экрана', 'Какие действия предложишь?'] };
+  if (page === 'settings') return { title: 'Настройки', facts: [], quick: ['Как включить 2FA?', 'Зачем тёмная тема?'] };
+  if (page === 'dashboard') return { title: 'Командный центр', facts: [], quick: ['Что сегодня важно?', 'Покажи риски', 'Состояние безопасности'] };
+  return { title: PAGE_TITLES[page] || page, facts: [], quick: ['Сделай сводку экрана', 'Найди аномалии', 'Какие действия предложишь?'] };
 }
 
-/* ---------- Selection mini-action → opens the in-page inline chat ---------- */
+/* ---------- 1) In-page split panel ---------- */
+interface Msg { who: 'u' | 'n'; text: string; nav?: { label: string; page: string }[]; action?: string }
+
+export function DockPanel() {
+  const { dockOpen, dockSeed, dockTitle, objStudent, page, closeDock, openChat, setPage, toast } = useApp();
+  const ctx = buildContext(objStudent, page);
+  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [input, setInput] = useState('');
+  const endRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!dockOpen) return;
+    if (dockSeed) {
+      const a = nexReply(dockSeed, { student: ctx.sid ?? null, page });
+      setMsgs([{ who: 'u', text: dockSeed }, { who: 'n', text: a.text, nav: a.nav, action: a.action }]);
+    } else {
+      setMsgs([{ who: 'n', text: `Я рядом со страницей «${ctx.title}» и вижу её контекст. Спросите что угодно — отвечу и при необходимости открою нужный экран.` }]);
+    }
+    setInput('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dockOpen, dockSeed, page, objStudent]);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ block: 'nearest' }); }, [msgs]);
+
+  if (!dockOpen) return null;
+
+  const ask = (q: string) => {
+    if (!q.trim()) return;
+    const a = nexReply(q, { student: ctx.sid ?? null, page });
+    setMsgs((m) => [...m, { who: 'u', text: q }, { who: 'n', text: a.text, nav: a.nav, action: a.action }]);
+    setInput('');
+  };
+  const submit = (e: FormEvent) => { e.preventDefault(); ask(input); };
+  const goto = (p: string) => { setPage(p); };
+
+  return (
+    <aside className="dock-panel" role="complementary" aria-label="Панель NEX">
+      <div className="dock-head">
+        <Sparkles size={16} className="spark" />
+        <div className="dock-titles">
+          <b>{dockTitle || 'NEX'}</b>
+          <span>работает со страницей «{ctx.title}»</span>
+        </div>
+        <button className="icon-btn" title="Открыть в полном чате" onClick={() => { openChat(dockSeed || undefined); }}><ExternalLink size={16} /></button>
+        <button className="icon-btn" title="Закрыть" onClick={closeDock}><X size={18} /></button>
+      </div>
+
+      {ctx.facts.length > 0 && (
+        <div className="dock-facts">{ctx.facts.map((f) => <span key={f}><Chip tone="chip-ai">{f}</Chip></span>)}</div>
+      )}
+
+      <div className="dock-body">
+        {msgs.map((m, i) => m.who === 'u'
+          ? <div className="inline-msg u" key={i}>{m.text}</div>
+          : (
+            <div className="inline-msg n" key={i}>
+              <div className="ic"><Sparkles size={12} /></div>
+              <div className="nb">
+                {m.text}
+                {m.nav && m.nav.length > 0 && (
+                  <div className="inline-nav">{m.nav.map((n) => <button key={n.page + n.label} className="chip-btn" onClick={() => goto(n.page)}>{n.label} <ArrowRight size={12} className="ic" /></button>)}</div>
+                )}
+                {m.action && <div className="inline-act"><button className="btn btn-sm btn-primary" onClick={() => toast(m.action + ' — выполнено')}>{m.action}</button></div>}
+              </div>
+            </div>
+          ))}
+        <div ref={endRef} />
+      </div>
+
+      <div className="dock-quick">
+        {ctx.quick.map((qk) => <button key={qk} className="chip-btn sm" onClick={() => ask(qk)}><Sparkles size={11} className="ic" />{qk}</button>)}
+      </div>
+
+      <form className="inline-foot" onSubmit={submit}>
+        <input autoFocus value={input} onChange={(e) => setInput(e.target.value)} placeholder="Спросите NEX об этой странице…" />
+        <button className="ask-send sm" type="submit" aria-label="Отправить"><ArrowUp size={16} /></button>
+      </form>
+    </aside>
+  );
+}
+
+/* ---------- 2) Selection popover → floating context-less explainer ---------- */
 function SelectionPopover() {
-  const { openInline, inline, aiOpen } = useApp();
+  const { openExplain, dockOpen, explain } = useApp();
   const [pos, setPos] = useState<{ x: number; y: number; text: string } | null>(null);
 
   useEffect(() => {
     const onUp = () => {
       const sel = window.getSelection();
       const text = sel?.toString().trim() || '';
-      if (!sel || text.length < 3 || aiOpen || inline) { setPos(null); return; }
+      if (!sel || text.length < 3 || explain) { setPos(null); return; }
       const node = sel.anchorNode as HTMLElement | null;
-      const host = node?.parentElement?.closest('.ai-panel, .sel-pop, .inline-chat, input, textarea, .chat-page');
+      const host = node?.parentElement?.closest('.dock-panel, .sel-pop, .sel-explain, input, textarea, .chat-page');
       if (host) { setPos(null); return; }
       const rect = sel.getRangeAt(0).getBoundingClientRect();
       if (!rect.width) { setPos(null); return; }
@@ -52,189 +135,58 @@ function SelectionPopover() {
     document.addEventListener('mouseup', onUp);
     document.addEventListener('mousedown', onDown);
     return () => { document.removeEventListener('mouseup', onUp); document.removeEventListener('mousedown', onDown); };
-  }, [aiOpen, inline]);
+  }, [dockOpen, explain]);
 
   if (!pos) return null;
-  const open = (explain: boolean) => { openInline({ x: pos.x - 180, y: pos.y + 22, seed: pos.text, explain, title: explain ? 'Объяснение' : 'NEX' }); setPos(null); };
+  const open = () => { openExplain({ x: pos.x, y: pos.y + 24, text: pos.text }); setPos(null); };
   return (
     <div className="sel-pop" style={{ left: pos.x, top: pos.y }}>
-      <button onMouseDown={(e) => { e.preventDefault(); open(false); }}><Sparkles size={13} />Спросить NEX</button>
-      <button onMouseDown={(e) => { e.preventDefault(); open(true); }}><Quote size={13} />Объяснить</button>
+      <button onMouseDown={(e) => { e.preventDefault(); open(); }}><Sparkles size={13} />Спросить NEX</button>
+      <button onMouseDown={(e) => { e.preventDefault(); open(); }}><Quote size={13} />Объяснить</button>
     </div>
   );
 }
 
-/* ---------- In-page inline chat: NEX works right inside the page ---------- */
-interface IMsg { who: 'u' | 'n'; text: string; nav?: { label: string; page: string }[]; action?: string }
+/** A plain, context-less explanation of the selected text. */
+function explainSelection(text: string): string {
+  const t = text.trim();
+  if (/^\d+([.,]\d+)?\s*%$/.test(t)) return `«${t}» — это процентный показатель. Доля от целого: чем выше значение, тем большая часть учтена (например, доля посещённых занятий или оплат).`;
+  if (/^[₽$€]?\s?\d[\d\s.,]*\s?[₽$€]?$/.test(t)) return `«${t}» — это денежная сумма. Обычно это поступление, задолженность или начисление в финансовом разделе.`;
+  if (/^[А-ЯЁ][а-яё]+(\s[А-ЯЁ]\.?){0,2}$/.test(t)) return `«${t}» — похоже на имя или ФИО человека (студента или сотрудника). В системе с ним связаны успеваемость, посещаемость и оплаты.`;
+  if (/[A-ZА-Я]{2,}-?\d/.test(t)) return `«${t}» — код учебной группы: буквы обозначают специальность, цифры — год набора и номер подгруппы.`;
+  if (t.split(/\s+/).length > 6) return `Это фрагмент текста интерфейса. Если коротко: здесь описывается состояние или рекомендация по разделу. Выделите конкретный термин, чтобы я объяснил точнее.`;
+  return `«${t}» — термин из интерфейса NEX. Это понятие, относящееся к учебному процессу, финансам или безопасности. Спросите подробнее в полном чате, чтобы привязать к данным.`;
+}
 
-function InlineChat() {
-  const { inline, closeInline, setPage, openChat, toast } = useApp();
-  const [msgs, setMsgs] = useState<IMsg[]>([]);
-  const [input, setInput] = useState('');
-  const [expanded, setExpanded] = useState(false);
-  const endRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!inline) return;
-    setExpanded(false);
-    const seed = inline.seed;
-    if (inline.explain) {
-      const a = nexReply('объясни это', { seed });
-      setMsgs([
-        { who: 'u', text: `«${seed.slice(0, 90)}»` },
-        { who: 'n', text: a.text, action: a.action },
-      ]);
-    } else {
-      const a = nexReply(seed);
-      setMsgs([{ who: 'u', text: seed }, { who: 'n', text: a.text, nav: a.nav, action: a.action }]);
-    }
-    setInput('');
-  }, [inline]);
-
-  useEffect(() => { endRef.current?.scrollIntoView({ block: 'nearest' }); }, [msgs]);
-
-  if (!inline) return null;
-
-  const ask = (q: string) => {
-    if (!q.trim()) return;
-    const a = nexReply(q, inline.explain ? { seed: inline.seed } : {});
-    setMsgs((m) => [...m, { who: 'u', text: q }, { who: 'n', text: a.text, nav: a.nav, action: a.action }]);
-    setInput('');
-  };
-  const submit = (e: FormEvent) => { e.preventDefault(); ask(input); };
-  const goto = (p: string) => { setPage(p); closeInline(); };
-
-  const W = expanded ? 460 : 360;
-  const left = Math.max(12, Math.min(inline.x, window.innerWidth - W - 12));
-  const top = Math.max(12, Math.min(inline.y, window.innerHeight - 160));
-  const quick = inline.explain ? ['Подробнее', 'Что с этим делать?'] : ['Что предпринять?', 'Подробнее'];
-
+function SelExplain() {
+  const { explain, closeExplain, openChat } = useApp();
+  if (!explain) return null;
+  const W = 320;
+  const left = Math.max(12, Math.min(explain.x - W / 2, window.innerWidth - W - 12));
+  const top = Math.max(12, Math.min(explain.y, window.innerHeight - 180));
   return (
     <>
-      <div className="inline-veil" onClick={closeInline} />
-      <div className={`inline-chat ${expanded ? 'expanded' : ''}`} style={{ left, top, width: W }} role="dialog" aria-label="NEX">
-        <div className="inline-head">
-          <Sparkles size={14} className="spark" />
-          <b>{inline.title || 'NEX'}</b>
-          <span className="inline-badge">на странице</span>
-          <button className="icon-btn" title={expanded ? 'Свернуть' : 'Развернуть на странице'} onClick={() => setExpanded((v) => !v)}>{expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}</button>
-          <button className="icon-btn" title="Открыть в полном чате" onClick={() => { openChat(inline.seed); closeInline(); }}><ExternalLink size={15} /></button>
-          <button className="icon-btn" title="Закрыть" onClick={closeInline}><X size={16} /></button>
+      <div className="inline-veil" onClick={closeExplain} />
+      <div className="sel-explain" style={{ left, top, width: W }} role="dialog" aria-label="NEX объясняет">
+        <div className="sel-explain-head">
+          <Sparkles size={13} className="spark" /><b>NEX объясняет</b>
+          <span className="inline-badge">без контекста</span>
+          <button className="icon-btn" title="Закрыть" onClick={closeExplain}><X size={15} /></button>
         </div>
-
-        <div className="inline-body">
-          {msgs.map((m, i) => m.who === 'u'
-            ? <div className="inline-msg u" key={i}>{m.text}</div>
-            : (
-              <div className="inline-msg n" key={i}>
-                <div className="ic"><Sparkles size={12} /></div>
-                <div className="nb">
-                  {m.text}
-                  {m.nav && m.nav.length > 0 && (
-                    <div className="inline-nav">{m.nav.map((n) => <button key={n.page + n.label} className="chip-btn" onClick={() => goto(n.page)}>{n.label} <ArrowRight size={12} className="ic" /></button>)}</div>
-                  )}
-                  {m.action && <div className="inline-act"><button className="btn btn-sm btn-primary" onClick={() => toast(m.action + ' — выполнено')}>{m.action}</button></div>}
-                </div>
-              </div>
-            ))}
-          <div ref={endRef} />
-        </div>
-
-        <div className="inline-quick">
-          {quick.map((qk) => <button key={qk} className="chip-btn sm" onClick={() => ask(qk)}>{qk}</button>)}
-        </div>
-
-        <form className="inline-foot" onSubmit={submit}>
-          <input autoFocus value={input} onChange={(e) => setInput(e.target.value)} placeholder="Спросите здесь…" />
-          <button className="ask-send sm" type="submit" aria-label="Отправить"><ArrowUp size={16} /></button>
-        </form>
+        <div className="sel-explain-body">{explainSelection(explain.text)}</div>
+        <button className="sel-explain-more" onClick={() => { openChat(`${explain.text} — объясни подробнее`); closeExplain(); }}>
+          Подробнее в чате с данными <ArrowRight size={13} />
+        </button>
       </div>
     </>
   );
 }
 
-/* ---------- Cmd+E contextual panel (narrow) ---------- */
-interface Msg { who: 'u' | 'n'; text: string; action?: string }
-
-function AiPanel() {
-  const { objStudent, page, aiSeed, closeAi, openChat, toast } = useApp();
-  const ctx = buildContext(objStudent, page, aiSeed);
-  const [msgs, setMsgs] = useState<Msg[]>([]);
-  const [input, setInput] = useState('');
-  const endRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (aiSeed) {
-      const a = nexReply('объясни это', { seed: aiSeed });
-      setMsgs([{ who: 'u', text: `«${aiSeed.slice(0, 90)}»` }, { who: 'n', text: a.text, action: a.action }]);
-    } else {
-      setMsgs([{ who: 'n', text: `Помогаю по этому экрану: ${ctx.title}. Для широких вопросов откройте полный чат.` }]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [objStudent, page, aiSeed]);
-
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs]);
-
-  const ask = (q: string) => {
-    if (!q.trim()) return;
-    const a = nexReply(q, { student: ctx.sid ?? null, page, seed: aiSeed });
-    setMsgs((m) => [...m, { who: 'u', text: q }, { who: 'n', text: a.text, action: a.action }]);
-    setInput('');
-  };
-  const submit = (e: FormEvent) => { e.preventDefault(); ask(input); };
-
-  return (
-    <div className="ai-panel" role="dialog" aria-label="NEX — помощник по экрану">
-      <div className="ai-panel-head">
-        <Sparkles size={16} className="spark" />
-        <b>Пространство NEX</b>
-        <button className="icon-btn" style={{ marginLeft: 'auto' }} title="Открыть полный чат" onClick={() => openChat()}><Maximize2 size={16} /></button>
-        <button className="icon-btn" onClick={closeAi} aria-label="Закрыть"><X size={18} /></button>
-      </div>
-
-      <div className="ai-ctx">
-        <div className="lbl"><Sparkles size={12} /> NEX видит текущий экран</div>
-        <div className="ttl">{ctx.title}</div>
-        {ctx.facts.length > 0 && <div className="facts">{ctx.facts.map((f) => <span key={f}><Chip tone="chip-ai">{f}</Chip></span>)}</div>}
-      </div>
-
-      <div className="ai-quick">
-        {ctx.quick.map((qk) => <button key={qk} className="chip-btn" onClick={() => ask(qk)}><Sparkles size={12} className="ic" />{qk}</button>)}
-      </div>
-
-      <div className="ai-msgs">
-        {msgs.map((m, i) => m.who === 'u'
-          ? <div className="ai-msg u" key={i}>{m.text}</div>
-          : (
-            <div className="ai-msg n" key={i}>
-              <div className="ic"><Sparkles size={13} /></div>
-              <div className="nb">
-                {m.text}
-                {m.action && <div className="act"><button className="btn btn-sm btn-primary" onClick={() => toast(m.action + ' — выполнено')}>{m.action}</button></div>}
-              </div>
-            </div>
-          ))}
-        <div ref={endRef} />
-      </div>
-
-      <form className="ai-foot" onSubmit={submit}>
-        <input autoFocus value={input} onChange={(e) => setInput(e.target.value)} placeholder="Узкий вопрос по этому экрану…" />
-        <button className="ask-send" type="submit" aria-label="Отправить"><ArrowUp size={18} /></button>
-      </form>
-      <button className="ai-escalate" onClick={() => openChat(input.trim() || undefined)}>
-        Открыть полный чат NEX <ArrowRight size={14} />
-      </button>
-    </div>
-  );
-}
-
 export function AiLayer() {
-  const { aiOpen } = useApp();
   return (
     <>
       <SelectionPopover />
-      <InlineChat />
-      {aiOpen && <AiPanel />}
+      <SelExplain />
     </>
   );
 }
