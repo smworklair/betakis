@@ -6,7 +6,7 @@ import {
   MessageSquare, FileText, Rss, Compass,
   type LucideIcon,
 } from 'lucide-react';
-import { useApp, Beta, type User } from './ui';
+import { useApp, Beta, useIsMobile, type User } from './ui';
 import { roleLabel, type Role } from './data';
 import { ContextDrawer } from './blocks';
 import { AiLayer, ProactiveStrip } from './ai';
@@ -304,7 +304,98 @@ function Shell() {
   );
 }
 
+/* ===================== Mobile shell (concept: AI-first, tab-bar native feel) ===================== */
+function MobileShell() {
+  const { user, page, setPage, openChat } = useApp();
+  const [sheet, setSheet] = useState(false);
+  if (!user) return null;
+
+  const go = (id: string) => { setPage(id); setSheet(false); };
+  const avail = Object.keys(META).filter((id) => id !== 'chat' && META[id].roles.includes(user.role));
+  const priority = ['students', 'finance', 'schedule', 'analytics', 'journal', 'security'].filter((id) => avail.includes(id));
+  const leftId = priority[0];
+  const rightId = priority[1];
+  const isChat = page === 'chat';
+
+  const Tab = ({ id }: { id?: string }) => {
+    if (!id) return <div className="m-tab" aria-hidden />;
+    const Icon = META[id].icon;
+    return (
+      <button className={`m-tab ${page === id ? 'active' : ''}`} onClick={() => go(id)}>
+        <Icon size={21} /><span>{META[id].label.split(' ')[0]}</span>
+      </button>
+    );
+  };
+
+  return (
+    <div className="m-shell">
+      <header className="m-top">
+        <div className="m-brand"><div className="brand-mark" style={{ width: 26, height: 26, fontSize: 13 }}>N</div><b>NEX</b></div>
+        <button className="m-ask" onClick={() => openChat()}><Sparkles size={14} />Спросить NEX</button>
+        <button className="icon-btn" onClick={() => go('notifications')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
+        <div className="avatar" onClick={() => go('settings')} title={user.name}>{(user.name[0] || 'U').toUpperCase()}</div>
+      </header>
+
+      <div className={`m-content ${isChat ? 'flush' : ''}`}>
+        <ProactiveStrip />
+        {renderPage(page)}
+      </div>
+
+      <nav className="m-tabs">
+        <Tab id="dashboard" />
+        <Tab id={leftId} />
+        <button className={`m-nex ${isChat ? 'active' : ''}`} onClick={() => openChat()} aria-label="NEX">
+          <Sparkles size={24} />
+        </button>
+        <Tab id={rightId} />
+        <button className={`m-tab ${sheet ? 'active' : ''}`} onClick={() => setSheet(true)}><Menu size={21} /><span>Ещё</span></button>
+      </nav>
+
+      {sheet && (
+        <div className="m-sheet-veil" onClick={() => setSheet(false)}>
+          <div className="m-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="m-sheet-grab" />
+            <div className="m-sheet-head"><b>Все разделы</b><button className="icon-btn" onClick={() => setSheet(false)}><X size={18} /></button></div>
+            <div className="m-sheet-grid">
+              {NAV.map((grp) => {
+                const items = grp.items.filter((id) => META[id].roles.includes(user.role));
+                if (items.length === 0) return null;
+                return (
+                  <div className="m-sheet-group" key={grp.title}>
+                    <div className="m-sheet-title">{grp.title}</div>
+                    <div className="m-sheet-tiles">
+                      {items.map((id) => {
+                        const Icon = META[id].icon;
+                        return (
+                          <button key={id} className={`m-sheet-tile ${page === id ? 'active' : ''}`} onClick={() => go(id)}>
+                            <Icon size={20} /><span>{META[id].label}</span>{META[id].beta && <Beta />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="m-sheet-group">
+                <div className="m-sheet-title">Аккаунт</div>
+                <div className="m-sheet-tiles">
+                  <button className={`m-sheet-tile ${page === 'settings' ? 'active' : ''}`} onClick={() => go('settings')}><SettingsIcon size={20} /><span>Настройки</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ContextDrawer />
+      <AiLayer />
+    </div>
+  );
+}
+
 export default function App() {
   const { user } = useApp();
-  return user ? <Shell /> : <Login />;
+  const isMobile = useIsMobile();
+  if (!user) return <Login />;
+  return isMobile ? <MobileShell /> : <Shell />;
 }

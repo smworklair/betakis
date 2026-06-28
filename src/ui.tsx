@@ -100,6 +100,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/** True on phone-sized viewports — drives a distinct mobile shell. */
+export function useIsMobile() {
+  const [m, setM] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 860px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 860px)');
+    const on = () => setM(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return m;
+}
+
 /* ---------- small presentational helpers ---------- */
 
 export const severityTone: Record<Severity, string> = {
