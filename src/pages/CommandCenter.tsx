@@ -111,6 +111,33 @@ function AdminCenter() {
 
       <Charts />
 
+      {/* NEX acts on its own — the agentic OS, under control */}
+      <div className="card" style={{ marginBottom: 18 }}>
+        <div className="card-head"><div className="card-title"><Sparkles size={15} style={{ color: 'var(--ai)' }} /> NEX действует сам</div><span className="dim" style={{ fontSize: 12 }}>автономно · под вашим контролем</span></div>
+        <div className="row-list">
+          <div className="feed-row">
+            <div className="feed-ico ai"><Sparkles size={14} /></div>
+            <div className="feed-main"><div className="t">Отметил 3 аномальных платежа</div><div className="m">нетипичные суммы от одного контрагента · добавлено в аудит</div></div>
+            <Chip tone="chip-success">сделано</Chip>
+          </div>
+          <div className="feed-row">
+            <div className="feed-ico ai"><Sparkles size={14} /></div>
+            <div className="feed-main"><div className="t">Подготовил 2 черновика приказов об отчислении</div><div className="m">по студентам с незакрытыми задолженностями</div></div>
+            <button className="btn btn-sm btn-outline" onClick={() => toast('Открываю черновики')}>Проверить</button>
+          </div>
+          <div className="feed-row">
+            <div className="feed-ico ai"><Sparkles size={14} /></div>
+            <div className="feed-main"><div className="t">Сбалансировал расписание</div><div className="m">закрыл свободное окно Пн 12:00 переносом «Сетей»</div></div>
+            <Chip tone="chip-success">сделано</Chip>
+          </div>
+          <div className="feed-row">
+            <div className="feed-ico ai"><Sparkles size={14} /></div>
+            <div className="feed-main"><div className="t">Подготовил уведомления 8 должникам</div><div className="m">ждёт вашего подтверждения перед отправкой</div></div>
+            <button className="btn btn-sm btn-primary" onClick={() => toast('Уведомления отправлены, событие в аудите')}>Подтвердить</button>
+          </div>
+        </div>
+      </div>
+
       <div className="grid dash-cols">
         <div className="grid" style={{ gap: 18 }}>
           <div className="card">

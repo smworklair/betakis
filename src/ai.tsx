@@ -1,9 +1,29 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Sparkles, X, ArrowUp, ArrowRight, Quote, ExternalLink } from 'lucide-react';
-import { useApp, Chip } from './ui';
+import { useApp, Chip, NexAsk } from './ui';
 import { students, finance } from './data';
-import { nexReply, attendanceRate, avgGrade, PAGE_TITLES } from './nexbrain';
+import { nexReply, attendanceRate, avgGrade, pageInsight, PAGE_TITLES } from './nexbrain';
+
+/* ---------- Proactive strip: NEX speaks first on every screen ---------- */
+export function ProactiveStrip() {
+  const { page } = useApp();
+  const [dismissed, setDismissed] = useState<Record<string, boolean>>({});
+  const ins = pageInsight(page);
+  if (!ins || dismissed[page]) return null;
+  return (
+    <div className="nex-strip">
+      <div className="nex-strip-ic"><Sparkles size={15} /></div>
+      <div className="nex-strip-main">
+        <div className="nex-strip-text">{ins.text}</div>
+        <div className="nex-strip-chips">
+          {ins.chips.map((c) => <span key={c.q}><NexAsk q={c.q} label={c.label} subtle={false} /></span>)}
+        </div>
+      </div>
+      <button className="icon-btn" title="Скрыть" onClick={() => setDismissed((d) => ({ ...d, [page]: true }))}><X size={16} /></button>
+    </div>
+  );
+}
 
 /* ============================================================
    Two AI surfaces:

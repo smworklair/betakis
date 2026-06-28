@@ -5,9 +5,34 @@ import {
   GitBranch, Paperclip, Boxes, AtSign, Check,
 } from 'lucide-react';
 import { useApp, Chip } from '../ui';
-import { nexReply, atRisk, type NexData, type NavLink } from '../nexbrain';
+import { nexReply, atRisk, planFor, type NexData, type NavLink } from '../nexbrain';
 import { finance } from '../data';
 import { Donut, Legend, type Segment } from '../charts';
+
+/* NEX performs an action as a visible agentic run (plan → steps → audit). */
+function AgentRun({ label }: { label: string }) {
+  const steps = planFor(label);
+  const [done, setDone] = useState(0);
+  useEffect(() => {
+    if (done >= steps.length) return;
+    const t = setTimeout(() => setDone((d) => d + 1), 650);
+    return () => clearTimeout(t);
+  }, [done, steps.length]);
+  const finished = done >= steps.length;
+  return (
+    <div className="agent-run">
+      <div className="agent-run-head"><Sparkles size={13} />NEX выполняет: {label}</div>
+      <div className="agent-steps">
+        {steps.map((s, i) => (
+          <div key={i} className={`agent-step ${i < done ? 'done' : i === done ? 'active' : ''}`}>
+            <span className="dot">{i < done ? <Check size={11} /> : <span className="spin" />}</span>{s}
+          </div>
+        ))}
+      </div>
+      {finished && <div className="agent-done"><Check size={13} /> Готово · записано в журнал аудита</div>}
+    </div>
+  );
+}
 
 const SUGGEST: { icon: typeof Sparkles; label: string; q: string }[] = [
   { icon: Activity, label: 'Что сегодня важно?', q: 'Что сегодня важно?' },
@@ -110,6 +135,7 @@ export default function Chat() {
   const rate = (i: number, v: 'up' | 'down') => { setFb((f) => ({ ...f, [i]: f[i] === v ? undefined as never : v })); toast(v === 'up' ? 'Спасибо за оценку' : 'Учту — отвечу лучше'); };
   const branch = (text: string) => { setChatLog(() => []); setFb({}); toast('Новая ветка от этого ответа'); setTimeout(() => send(text), 0); };
   const addMention = (m: string) => { setInput((s) => `${s}@${m} `.replace(/\s+@/, ' @').trimStart()); setMentionOpen(false); };
+  const runAction = (label: string) => { setChatLog((m) => [...m, { who: 'n', text: '', run: label }]); };
 
   return (
     <div className="chat-page fade">
@@ -148,21 +174,23 @@ export default function Chat() {
                 <div className="chat-msg n" key={i}>
                   <div className="ava"><Sparkles size={15} /></div>
                   <div className="body">
-                    <div className="prose">{m.text}</div>
+                    {m.run ? <AgentRun label={m.run} /> : <div className="prose">{m.text}</div>}
                     {m.data && <DataBlock kind={m.data} />}
                     {m.nav && m.nav.length > 0 && <NavChips nav={m.nav} />}
                     {m.action && (
                       <div className="chat-act">
-                        <button className="btn btn-sm btn-primary" onClick={() => toast(m.action + ' — выполнено')}><Sparkles size={13} />{m.action}</button>
-                        <span className="dim" style={{ fontSize: 11.5 }}>с подтверждением и аудитом</span>
+                        <button className="btn btn-sm btn-primary" onClick={() => runAction(m.action!)}><Sparkles size={13} />{m.action}</button>
+                        <span className="dim" style={{ fontSize: 11.5 }}>NEX выполнит по шагам · с аудитом</span>
                       </div>
                     )}
-                    <div className="msg-tools">
-                      <button title="Скопировать" onClick={() => copy(m.text, i)}>{copied === i ? <Check size={13} /> : <Copy size={13} />}</button>
-                      <button className={fb[i] === 'up' ? 'on' : ''} title="Хороший ответ" onClick={() => rate(i, 'up')}><ThumbsUp size={13} /></button>
-                      <button className={fb[i] === 'down' ? 'on' : ''} title="Плохой ответ" onClick={() => rate(i, 'down')}><ThumbsDown size={13} /></button>
-                      <button title="Ветка в новом чате" onClick={() => branch(m.text)}><GitBranch size={13} /></button>
-                    </div>
+                    {!m.run && (
+                      <div className="msg-tools">
+                        <button title="Скопировать" onClick={() => copy(m.text, i)}>{copied === i ? <Check size={13} /> : <Copy size={13} />}</button>
+                        <button className={fb[i] === 'up' ? 'on' : ''} title="Хороший ответ" onClick={() => rate(i, 'up')}><ThumbsUp size={13} /></button>
+                        <button className={fb[i] === 'down' ? 'on' : ''} title="Плохой ответ" onClick={() => rate(i, 'down')}><ThumbsDown size={13} /></button>
+                        <button title="Ветка в новом чате" onClick={() => branch(m.text)}><GitBranch size={13} /></button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

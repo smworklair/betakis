@@ -726,6 +726,30 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; }
 .campus-tile { display: flex; align-items: center; gap: 12px; padding: 16px; cursor: pointer; transition: border-color .12s, transform .12s; }
 .campus-tile:hover { border-color: var(--ai); transform: translateY(-2px); }
 .campus-ic { width: 42px; height: 42px; border-radius: 12px; background: var(--ai-weak); color: var(--ai); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* ============================================================
+   AI-native: proactive strip (NEX speaks first) + agentic runs
+   ============================================================ */
+.nex-strip { max-width: 1280px; margin: 0 auto 18px; display: flex; align-items: flex-start; gap: 12px; padding: 13px 15px;
+  border: 1px solid color-mix(in srgb, var(--ai) 28%, var(--border)); border-left: 3px solid var(--ai);
+  border-radius: var(--r-lg); background: color-mix(in srgb, var(--ai) 7%, var(--surface)); }
+.nex-strip-ic { width: 28px; height: 28px; border-radius: 8px; background: var(--ai-weak); color: var(--ai); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nex-strip-main { flex: 1; min-width: 0; }
+.nex-strip-text { font-size: 13.5px; line-height: 1.55; color: var(--text); }
+.nex-strip-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+
+.agent-run { border: 1px solid color-mix(in srgb, var(--ai) 24%, var(--border-2)); border-radius: var(--r-md); background: var(--ai-weak); padding: 11px 13px; }
+.agent-run-head { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; color: var(--ai); margin-bottom: 9px; }
+.agent-steps { display: flex; flex-direction: column; gap: 7px; }
+.agent-step { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--text-3); }
+.agent-step.active { color: var(--text); }
+.agent-step.done { color: var(--text-2); }
+.agent-step .dot { width: 17px; height: 17px; border-radius: 999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border-2); color: var(--success); }
+.agent-step.done .dot { background: var(--success); border-color: var(--success); color: #fff; }
+.agent-step .spin { width: 9px; height: 9px; border-radius: 999px; border: 2px solid color-mix(in srgb, var(--ai) 30%, transparent); border-top-color: var(--ai); animation: spin .7s linear infinite; }
+.agent-step.active .spin { display: inline-block; }
+.agent-done { display: flex; align-items: center; gap: 7px; margin-top: 10px; font-size: 12.5px; font-weight: 600; color: var(--success); }
+@keyframes spin { to { transform: rotate(360deg); } }
 .ai-toggle.on { background: var(--ai-weak); color: var(--ai); }
 .nav-toggle, .nav-close { display: none; }
 .nav-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 390; animation: fadeIn .12s ease-out; }

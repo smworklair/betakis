@@ -9,7 +9,7 @@ import {
 import { useApp, Beta, type User } from './ui';
 import { roleLabel, type Role } from './data';
 import { ContextDrawer } from './blocks';
-import { AiLayer } from './ai';
+import { AiLayer, ProactiveStrip } from './ai';
 
 import Chat from './pages/Chat';
 import { Messenger, NotificationsPage, Documents, Feed, Campus } from './pages/beta';
@@ -292,7 +292,10 @@ function Shell() {
           <button className="icon-btn topbar-bell" onClick={() => nav('notifications')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
           <div className="avatar" title={`${user.name} · ${roleLabel[user.role]}`}>{(user.name[0] || 'U').toUpperCase()}</div>
         </header>
-        <div className={`content ${page === 'chat' ? 'content-flush' : ''}`}>{renderPage(page)}</div>
+        <div className={`content ${page === 'chat' ? 'content-flush' : ''}`}>
+          <ProactiveStrip />
+          {renderPage(page)}
+        </div>
       </div>
 
       <ContextDrawer />
