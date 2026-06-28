@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { Sparkles, X, ArrowUp, ArrowRight, Quote, ExternalLink } from 'lucide-react';
 import { useApp, Chip } from './ui';
 import { students, finance } from './data';
@@ -6,7 +7,8 @@ import { nexReply, attendanceRate, avgGrade, PAGE_TITLES } from './nexbrain';
 
 /* ============================================================
    Two AI surfaces:
-   1) DockPanel — opens INSIDE the page, splits it and works WITH it.
+   1) InlinePanel — opens IN the page flow, under the clicked block,
+      pushing the rest of the content down. Works with the page context.
    2) SelExplain — a small floating, context-LESS explainer that
       only appears when you select text.
    ============================================================ */
@@ -33,31 +35,30 @@ function buildContext(objStudent: number | null, page: string): Ctx {
   return { title: PAGE_TITLES[page] || page, facts: [], quick: ['Сделай сводку экрана', 'Найди аномалии', 'Какие действия предложишь?'] };
 }
 
-/* ---------- 1) In-page split panel ---------- */
+/* ---------- 1) In-page inline panel (portaled under the clicked block) ---------- */
 interface Msg { who: 'u' | 'n'; text: string; nav?: { label: string; page: string }[]; action?: string }
 
-export function DockPanel() {
-  const { dockOpen, dockSeed, dockTitle, objStudent, page, closeDock, openChat, setPage, toast } = useApp();
+function InlinePanel() {
+  const { inlineSeed, inlineTitle, objStudent, page, closeInline, openChat, setPage, toast } = useApp();
   const ctx = buildContext(objStudent, page);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!dockOpen) return;
-    if (dockSeed) {
-      const a = nexReply(dockSeed, { student: ctx.sid ?? null, page });
-      setMsgs([{ who: 'u', text: dockSeed }, { who: 'n', text: a.text, nav: a.nav, action: a.action }]);
+    if (inlineSeed) {
+      const a = nexReply(inlineSeed, { student: ctx.sid ?? null, page });
+      setMsgs([{ who: 'u', text: inlineSeed }, { who: 'n', text: a.text, nav: a.nav, action: a.action }]);
     } else {
-      setMsgs([{ who: 'n', text: `Я рядом со страницей «${ctx.title}» и вижу её контекст. Спросите что угодно — отвечу и при необходимости открою нужный экран.` }]);
+      setMsgs([{ who: 'n', text: `Я раскрылся прямо в этом блоке и вижу контекст страницы «${ctx.title}». Спрашивайте.` }]);
     }
     setInput('');
+    rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dockOpen, dockSeed, page, objStudent]);
+  }, [inlineSeed, inlineTitle]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'nearest' }); }, [msgs]);
-
-  if (!dockOpen) return null;
 
   const ask = (q: string) => {
     if (!q.trim()) return;
@@ -66,25 +67,18 @@ export function DockPanel() {
     setInput('');
   };
   const submit = (e: FormEvent) => { e.preventDefault(); ask(input); };
-  const goto = (p: string) => { setPage(p); };
 
   return (
-    <aside className="dock-panel" role="complementary" aria-label="Панель NEX">
-      <div className="dock-head">
-        <Sparkles size={16} className="spark" />
-        <div className="dock-titles">
-          <b>{dockTitle || 'NEX'}</b>
-          <span>работает со страницей «{ctx.title}»</span>
-        </div>
-        <button className="icon-btn" title="Открыть в полном чате" onClick={() => { openChat(dockSeed || undefined); }}><ExternalLink size={16} /></button>
-        <button className="icon-btn" title="Закрыть" onClick={closeDock}><X size={18} /></button>
+    <div className="nex-inline" ref={rootRef}>
+      <div className="nex-inline-head">
+        <Sparkles size={15} className="spark" />
+        <b>{inlineTitle || 'NEX'}</b>
+        <span className="inline-badge">в странице</span>
+        <button className="icon-btn" title="Открыть в полном чате" onClick={() => openChat(inlineSeed || undefined)}><ExternalLink size={15} /></button>
+        <button className="icon-btn" title="Закрыть" onClick={closeInline}><X size={16} /></button>
       </div>
 
-      {ctx.facts.length > 0 && (
-        <div className="dock-facts">{ctx.facts.map((f) => <span key={f}><Chip tone="chip-ai">{f}</Chip></span>)}</div>
-      )}
-
-      <div className="dock-body">
+      <div className="nex-inline-body">
         {msgs.map((m, i) => m.who === 'u'
           ? <div className="inline-msg u" key={i}>{m.text}</div>
           : (
@@ -93,7 +87,7 @@ export function DockPanel() {
               <div className="nb">
                 {m.text}
                 {m.nav && m.nav.length > 0 && (
-                  <div className="inline-nav">{m.nav.map((n) => <button key={n.page + n.label} className="chip-btn" onClick={() => goto(n.page)}>{n.label} <ArrowRight size={12} className="ic" /></button>)}</div>
+                  <div className="inline-nav">{m.nav.map((n) => <button key={n.page + n.label} className="chip-btn" onClick={() => setPage(n.page)}>{n.label} <ArrowRight size={12} className="ic" /></button>)}</div>
                 )}
                 {m.action && <div className="inline-act"><button className="btn btn-sm btn-primary" onClick={() => toast(m.action + ' — выполнено')}>{m.action}</button></div>}
               </div>
@@ -102,21 +96,28 @@ export function DockPanel() {
         <div ref={endRef} />
       </div>
 
-      <div className="dock-quick">
+      <div className="nex-inline-quick">
         {ctx.quick.map((qk) => <button key={qk} className="chip-btn sm" onClick={() => ask(qk)}><Sparkles size={11} className="ic" />{qk}</button>)}
       </div>
 
       <form className="inline-foot" onSubmit={submit}>
-        <input autoFocus value={input} onChange={(e) => setInput(e.target.value)} placeholder="Спросите NEX об этой странице…" />
+        <input autoFocus value={input} onChange={(e) => setInput(e.target.value)} placeholder="Спросите NEX прямо здесь…" />
         <button className="ask-send sm" type="submit" aria-label="Отправить"><ArrowUp size={16} /></button>
       </form>
-    </aside>
+    </div>
   );
+}
+
+/** Portals the inline panel into whatever block the user clicked in. */
+export function InlinePanelHost() {
+  const { inlineHost } = useApp();
+  if (!inlineHost) return null;
+  return createPortal(<InlinePanel />, inlineHost);
 }
 
 /* ---------- 2) Selection popover → floating context-less explainer ---------- */
 function SelectionPopover() {
-  const { openExplain, dockOpen, explain } = useApp();
+  const { openExplain, inlineHost, explain } = useApp();
   const [pos, setPos] = useState<{ x: number; y: number; text: string } | null>(null);
 
   useEffect(() => {
@@ -125,7 +126,7 @@ function SelectionPopover() {
       const text = sel?.toString().trim() || '';
       if (!sel || text.length < 3 || explain) { setPos(null); return; }
       const node = sel.anchorNode as HTMLElement | null;
-      const host = node?.parentElement?.closest('.dock-panel, .sel-pop, .sel-explain, input, textarea, .chat-page');
+      const host = node?.parentElement?.closest('.nex-inline, .sel-pop, .sel-explain, input, textarea, .chat-page');
       if (host) { setPos(null); return; }
       const rect = sel.getRangeAt(0).getBoundingClientRect();
       if (!rect.width) { setPos(null); return; }
@@ -135,7 +136,7 @@ function SelectionPopover() {
     document.addEventListener('mouseup', onUp);
     document.addEventListener('mousedown', onDown);
     return () => { document.removeEventListener('mouseup', onUp); document.removeEventListener('mousedown', onDown); };
-  }, [dockOpen, explain]);
+  }, [inlineHost, explain]);
 
   if (!pos) return null;
   const open = () => { openExplain({ x: pos.x, y: pos.y + 24, text: pos.text }); setPos(null); };
@@ -187,6 +188,7 @@ export function AiLayer() {
     <>
       <SelectionPopover />
       <SelExplain />
+      <InlinePanelHost />
     </>
   );
 }

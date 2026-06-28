@@ -8,7 +8,7 @@ import {
 import { useApp, type User } from './ui';
 import { roleLabel, type Role } from './data';
 import { ContextDrawer } from './blocks';
-import { AiLayer, DockPanel } from './ai';
+import { AiLayer } from './ai';
 
 import Chat from './pages/Chat';
 import CommandCenter from './pages/CommandCenter';
@@ -227,7 +227,7 @@ function NexOmni() {
 
 /* ===================== Shell ===================== */
 function Shell() {
-  const { user, page, setPage, sidebarEnabled, navOpen, setNavOpen, dockOpen, openDock, closeDock } = useApp();
+  const { user, page, setPage, sidebarEnabled, navOpen, setNavOpen, openChat } = useApp();
 
   if (!user) return null;
   const title = META[page]?.label || 'NEX';
@@ -275,14 +275,11 @@ function Shell() {
           <button className="icon-btn nav-toggle" onClick={() => setNavOpen(true)} aria-label="Меню"><Menu size={18} /></button>
           <strong className="topbar-title" style={{ fontSize: 14, fontWeight: 600 }}>{title}</strong>
           <NexOmni />
-          <button className={`icon-btn ai-toggle ${dockOpen ? 'on' : ''}`} onClick={() => (dockOpen ? closeDock() : openDock())} title="Панель NEX" aria-label="Панель NEX"><Sparkles size={18} /></button>
+          <button className="icon-btn ai-toggle" onClick={() => openChat()} title="Открыть чат NEX" aria-label="Чат NEX"><Sparkles size={18} /></button>
           <button className="icon-btn topbar-bell" onClick={() => nav('dashboard')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
           <div className="avatar" title={`${user.name} · ${roleLabel[user.role]}`}>{(user.name[0] || 'U').toUpperCase()}</div>
         </header>
-        <div className={`work ${dockOpen ? 'dock-open' : ''}`}>
-          <div className={`content ${page === 'chat' ? 'content-flush' : ''}`}>{renderPage(page)}</div>
-          <DockPanel />
-        </div>
+        <div className={`content ${page === 'chat' ? 'content-flush' : ''}`}>{renderPage(page)}</div>
       </div>
 
       <ContextDrawer />
