@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Search, Plus, Users } from 'lucide-react';
-import { PageHead, Chip, Avatar, AiInsightCard, useApp } from '../ui';
+import { PageHead, Chip, Avatar, AiInsightCard, NexAsk, useApp } from '../ui';
 import { students, groups, staff } from '../data';
 
 const statusTone = (s: string) => (s === 'Обучается' || s === 'Активен' ? 'chip-success' : s === 'Академический отпуск' || s === 'Отпуск' ? 'chip-warn' : 'chip-neutral');
@@ -41,7 +41,10 @@ export function Students() {
               style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', color: 'var(--text)', fontSize: 13 }}
             />
           </div>
-          <span className="dim" style={{ fontSize: 12 }}>{list.length} записей</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <NexAsk q="Кто из студентов в зоне риска и почему? Предложи действия." label="Анализ выборки" />
+            <span className="dim" style={{ fontSize: 12 }}>{list.length} записей</span>
+          </div>
         </div>
         <div className="table-wrap">
           <table className="tbl">

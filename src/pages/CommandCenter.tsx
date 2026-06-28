@@ -3,7 +3,7 @@ import {
   Sparkles, ShieldAlert, Wallet, Users, CalendarCheck, FileText, AlertTriangle, LogIn,
   Monitor, TrendingUp, TrendingDown, CheckCircle2, ArrowRight, Activity, ShieldCheck, BookOpen,
 } from 'lucide-react';
-import { useApp, Chip, Avatar, Sparkline, severityTone, severityLabel } from '../ui';
+import { useApp, Chip, Avatar, Sparkline, NexAsk, severityTone, severityLabel } from '../ui';
 import { AtRiskList } from '../blocks';
 import { Donut, Bars, Line, Legend, type Segment } from '../charts';
 import {
@@ -26,15 +26,15 @@ function Charts() {
   return (
     <div className="grid cols-3" style={{ marginBottom: 18 }}>
       <div className="card">
-        <div className="card-head"><div className="card-title">Посещаемость · динамика</div><span className="dim" style={{ fontSize: 12 }}>12 недель</span></div>
+        <div className="card-head"><div className="card-title">Посещаемость · динамика</div><NexAsk q="Почему посещаемость снизилась на 2% за неделю? Какие группы дали основной вклад?" label="Объяснить тренд" /></div>
         <div className="card-body"><Line data={attendanceTrend} color="var(--accent)" min={80} max={100} /><div className="muted" style={{ fontSize: 12, marginTop: 8 }}>Средняя 91% · −2% за неделю</div></div>
       </div>
       <div className="card">
-        <div className="card-head"><div className="card-title">Распределение оценок</div></div>
+        <div className="card-head"><div className="card-title">Распределение оценок</div><NexAsk q="Разбери распределение оценок по организации и где проседает успеваемость" label="Разобрать" /></div>
         <div className="card-body chart-flex"><Donut segments={gradeSegs} centerTop={total} centerSub="оценок" /><Legend segments={gradeSegs} withValues /></div>
       </div>
       <div className="card">
-        <div className="card-head"><div className="card-title">Студенты по группам</div></div>
+        <div className="card-head"><div className="card-title">Студенты по группам</div><NexAsk q="Сравни группы по численности и нагрузке" label="Сравнить" /></div>
         <div className="card-body"><Bars data={byGroup} color="var(--ai)" /></div>
       </div>
     </div>

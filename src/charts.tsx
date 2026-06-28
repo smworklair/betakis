@@ -20,7 +20,9 @@ export function Donut({ segments, size = 150, thickness = 20, centerTop, centerS
         const el = (
           <circle key={i} cx={c} cy={c} r={r} fill="none" stroke={s.color} strokeWidth={thickness}
             strokeDasharray={`${len} ${circ - len}`} strokeDashoffset={-offset}
-            transform={`rotate(-90 ${c} ${c})`} />
+            transform={`rotate(-90 ${c} ${c})`}>
+            <title>{s.label}: {s.value} ({Math.round((s.value / total) * 100)}%)</title>
+          </circle>
         );
         offset += len;
         return el;
@@ -53,7 +55,7 @@ export function Bars({ data, color = 'var(--accent)', height = 170 }: {
       {data.map((d) => (
         <div className="bar-col" key={d.label}>
           <span className="bar-v">{d.value}</span>
-          <div className="bar-track"><div className="bar-fill" style={{ height: `${(d.value / max) * 100}%`, background: d.color || color }} /></div>
+          <div className="bar-track" title={`${d.label}: ${d.value}`}><div className="bar-fill" style={{ height: `${(d.value / max) * 100}%`, background: d.color || color }} /></div>
           <span className="bar-x">{d.label}</span>
         </div>
       ))}
@@ -76,7 +78,7 @@ export function Line({ data, color = 'var(--accent)', height = 150, min, max }: 
     <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={height} preserveAspectRatio="none">
       <polygon points={area} fill={color} opacity={0.1} />
       <polyline points={line} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-      {pts.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={2.5} fill={color} />)}
+      {pts.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={2.5} fill={color}><title>{data[i]}</title></circle>)}
     </svg>
   );
 }
