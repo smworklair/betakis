@@ -97,7 +97,7 @@ function AiPanel() {
     <div className="ai-panel" role="dialog" aria-label="NEX — помощник по экрану">
       <div className="ai-panel-head">
         <Sparkles size={16} className="spark" />
-        <b>NEX по экрану</b>
+        <b>Пространство NEX</b>
         <button className="icon-btn" style={{ marginLeft: 'auto' }} title="Открыть полный чат" onClick={() => openChat()}><Maximize2 size={16} /></button>
         <button className="icon-btn" onClick={closeAi} aria-label="Закрыть"><X size={18} /></button>
       </div>
