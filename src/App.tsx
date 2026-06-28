@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef, type ReactNode, type FormEvent, t
 import {
   LayoutDashboard, Users, School, ClipboardList, Calendar, BookOpen, CheckSquare,
   Wallet, Award, Briefcase, BarChart3, GraduationCap, ShieldCheck, Settings as SettingsIcon,
-  Bell, Sparkles, Lock, User as UserIcon, ArrowRight, Menu, X,
+  Bell, Sparkles, Lock, User as UserIcon, ArrowRight, Menu, X, LogOut,
   MessageSquare, FileText, Rss, Compass,
   type LucideIcon,
 } from 'lucide-react';
@@ -304,36 +304,25 @@ function Shell() {
   );
 }
 
-/* ===================== Mobile shell (concept: AI-first, tab-bar native feel) ===================== */
+/* ===================== Mobile shell (X / Twitter-style architecture) ===================== */
 function MobileShell() {
-  const { user, page, setPage, openChat } = useApp();
-  const [sheet, setSheet] = useState(false);
+  const { user, page, setPage, openChat, setUser } = useApp();
+  const [drawer, setDrawer] = useState(false);
   if (!user) return null;
 
-  const go = (id: string) => { setPage(id); setSheet(false); };
+  const go = (id: string) => { setPage(id); setDrawer(false); };
   const avail = Object.keys(META).filter((id) => id !== 'chat' && META[id].roles.includes(user.role));
-  const priority = ['students', 'finance', 'schedule', 'analytics', 'journal', 'security'].filter((id) => avail.includes(id));
-  const leftId = priority[0];
-  const rightId = priority[1];
+  const tabs = ['dashboard', 'students', 'notifications', 'messenger', 'finance', 'schedule', 'analytics', 'security']
+    .filter((id) => avail.includes(id)).slice(0, 4);
   const isChat = page === 'chat';
-
-  const Tab = ({ id }: { id?: string }) => {
-    if (!id) return <div className="m-tab" aria-hidden />;
-    const Icon = META[id].icon;
-    return (
-      <button className={`m-tab ${page === id ? 'active' : ''}`} onClick={() => go(id)}>
-        <Icon size={21} /><span>{META[id].label.split(' ')[0]}</span>
-      </button>
-    );
-  };
+  const initials = (user.name[0] || 'U').toUpperCase();
 
   return (
     <div className="m-shell">
-      <header className="m-top">
-        <div className="m-brand"><div className="brand-mark" style={{ width: 26, height: 26, fontSize: 13 }}>N</div><b>NEX</b></div>
-        <button className="m-ask" onClick={() => openChat()}><Sparkles size={14} />Спросить NEX</button>
-        <button className="icon-btn" onClick={() => go('notifications')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
-        <div className="avatar" onClick={() => go('settings')} title={user.name}>{(user.name[0] || 'U').toUpperCase()}</div>
+      <header className="m-top x">
+        <button className="m-avatar-btn" onClick={() => setDrawer(true)} aria-label="Меню"><span className="avatar">{initials}</span></button>
+        <div className="m-brand-c"><div className="brand-mark" style={{ width: 24, height: 24, fontSize: 12 }}>N</div><b>NEX</b></div>
+        <button className="icon-btn" onClick={() => go('notifications')} aria-label="Уведомления"><Bell size={20} /><span className="dot-alert" /></button>
       </header>
 
       <div className={`m-content ${isChat ? 'flush' : ''}`}>
@@ -341,47 +330,46 @@ function MobileShell() {
         {renderPage(page)}
       </div>
 
-      <nav className="m-tabs">
-        <Tab id="dashboard" />
-        <Tab id={leftId} />
-        <button className={`m-nex ${isChat ? 'active' : ''}`} onClick={() => openChat()} aria-label="NEX">
-          <Sparkles size={24} />
-        </button>
-        <Tab id={rightId} />
-        <button className={`m-tab ${sheet ? 'active' : ''}`} onClick={() => setSheet(true)}><Menu size={21} /><span>Ещё</span></button>
+      {!isChat && (
+        <button className="m-fab" onClick={() => openChat()} aria-label="Спросить NEX"><Sparkles size={24} /></button>
+      )}
+
+      <nav className="m-tabs x">
+        {tabs.map((id) => {
+          const Icon = META[id].icon;
+          return <button key={id} className={`m-tab ${page === id ? 'active' : ''}`} onClick={() => go(id)} aria-label={META[id].label}><Icon size={24} /></button>;
+        })}
+        <button className={`m-tab ${isChat ? 'active' : ''}`} onClick={() => openChat()} aria-label="NEX"><Sparkles size={24} /></button>
       </nav>
 
-      {sheet && (
-        <div className="m-sheet-veil" onClick={() => setSheet(false)}>
-          <div className="m-sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="m-sheet-grab" />
-            <div className="m-sheet-head"><b>Все разделы</b><button className="icon-btn" onClick={() => setSheet(false)}><X size={18} /></button></div>
-            <div className="m-sheet-grid">
+      {drawer && (
+        <div className="m-drawer-veil" onClick={() => setDrawer(false)}>
+          <div className="m-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="m-drawer-head">
+              <span className="avatar lg">{initials}</span>
+              <div className="m-drawer-id"><b>{user.name}</b><span className="dim">{roleLabel[user.role]}</span></div>
+            </div>
+            <div className="m-drawer-nav">
               {NAV.map((grp) => {
                 const items = grp.items.filter((id) => META[id].roles.includes(user.role));
                 if (items.length === 0) return null;
                 return (
-                  <div className="m-sheet-group" key={grp.title}>
-                    <div className="m-sheet-title">{grp.title}</div>
-                    <div className="m-sheet-tiles">
-                      {items.map((id) => {
-                        const Icon = META[id].icon;
-                        return (
-                          <button key={id} className={`m-sheet-tile ${page === id ? 'active' : ''}`} onClick={() => go(id)}>
-                            <Icon size={20} /><span>{META[id].label}</span>{META[id].beta && <Beta />}
-                          </button>
-                        );
-                      })}
-                    </div>
+                  <div key={grp.title}>
+                    <div className="m-drawer-group">{grp.title}</div>
+                    {items.map((id) => {
+                      const Icon = META[id].icon;
+                      return (
+                        <button key={id} className={`m-drawer-item ${page === id ? 'active' : ''}`} onClick={() => go(id)}>
+                          <Icon size={20} /><span>{META[id].label}</span>{META[id].beta && <Beta />}
+                        </button>
+                      );
+                    })}
                   </div>
                 );
               })}
-              <div className="m-sheet-group">
-                <div className="m-sheet-title">Аккаунт</div>
-                <div className="m-sheet-tiles">
-                  <button className={`m-sheet-tile ${page === 'settings' ? 'active' : ''}`} onClick={() => go('settings')}><SettingsIcon size={20} /><span>Настройки</span></button>
-                </div>
-              </div>
+              <div className="m-drawer-sep" />
+              <button className={`m-drawer-item ${page === 'settings' ? 'active' : ''}`} onClick={() => go('settings')}><SettingsIcon size={20} /><span>Настройки</span></button>
+              <button className="m-drawer-item" onClick={() => setUser(null)}><LogOut size={20} /><span>Выйти</span></button>
             </div>
           </div>
         </div>
