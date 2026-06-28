@@ -10,6 +10,7 @@ import { roleLabel, type Role } from './data';
 import { ContextDrawer } from './blocks';
 import { AiLayer } from './ai';
 
+import Chat from './pages/Chat';
 import CommandCenter from './pages/CommandCenter';
 import { SecurityConsole } from './pages/Dashboard';
 import { Students, Groups, Staff } from './pages/people';
@@ -22,6 +23,7 @@ interface Meta { label: string; icon: LucideIcon; roles: Role[]; }
 const ALL: Role[] = ['admin', 'teacher', 'accountant', 'student'];
 
 const META: Record<string, Meta> = {
+  chat: { label: 'NEX · Чат', icon: Sparkles, roles: ALL },
   dashboard: { label: 'Командный центр', icon: LayoutDashboard, roles: ALL },
   students: { label: 'Студенты', icon: Users, roles: ['admin', 'teacher', 'accountant'] },
   groups: { label: 'Группы', icon: School, roles: ['admin', 'teacher'] },
@@ -50,6 +52,7 @@ const NAV: { title: string; items: string[] }[] = [
 
 function renderPage(id: string): ReactNode {
   switch (id) {
+    case 'chat': return <Chat />;
     case 'dashboard': return <CommandCenter />;
     case 'security': return <SecurityConsole />;
     case 'students': return <Students />;
@@ -178,17 +181,18 @@ function CommandPalette() {
 
 /* ===================== Shell ===================== */
 function Shell() {
-  const { user, page, setPage, cmdOpen, setCmdOpen, aiOpen, openAi, closeAi } = useApp();
+  const { user, page, setPage, cmdOpen, setCmdOpen, aiOpen, openAi, closeAi, openChat } = useApp();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setCmdOpen(true); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') { e.preventDefault(); openChat(); }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'e') { e.preventDefault(); aiOpen ? closeAi() : openAi(); }
       if (e.key === 'Escape') { setCmdOpen(false); closeAi(); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [setCmdOpen, aiOpen, openAi, closeAi]);
+  }, [setCmdOpen, aiOpen, openAi, closeAi, openChat]);
 
   if (!user) return null;
   const title = META[page]?.label || 'NEX';
@@ -200,6 +204,9 @@ function Shell() {
           <div className="brand-mark">N</div>
           <div className="brand-text"><b>NEX</b><span>КИС Колледж</span></div>
         </div>
+        <button className={`nex-ask ${page === 'chat' ? 'active' : ''}`} onClick={() => openChat()}>
+          <Sparkles size={16} /><span>Спросить NEX</span><span className="kbd">⌘J</span>
+        </button>
         <nav className="sidebar-nav">
           {NAV.map((grp) => {
             const items = grp.items.filter((id) => META[id].roles.includes(user.role));
@@ -230,13 +237,14 @@ function Shell() {
       <div className="main">
         <header className="topbar">
           <strong style={{ fontSize: 14, fontWeight: 600 }}>{title}</strong>
-          <div className="cmd-trigger" style={{ margin: '0 auto' }} onClick={() => setCmdOpen(true)}>
-            <Search size={15} />Перейти к разделу…<span className="kbd">⌘K</span>
-          </div>
+          <button className="ask-bar" onClick={() => openChat()}>
+            <Sparkles size={15} className="spark" /><span>Спросить NEX — что угодно об организации…</span><span className="kbd">⌘J</span>
+          </button>
+          <button className="icon-btn" onClick={() => setCmdOpen(true)} title="Перейти к разделу (⌘K)" aria-label="Поиск раздела"><Search size={18} /></button>
           <button className="icon-btn" onClick={() => setPage('dashboard')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
           <div className="avatar" title={`${user.name} · ${roleLabel[user.role]}`}>{(user.name[0] || 'U').toUpperCase()}</div>
         </header>
-        <div className="content">{renderPage(page)}</div>
+        <div className={`content ${page === 'chat' ? 'content-flush' : ''}`}>{renderPage(page)}</div>
       </div>
 
       <ContextDrawer />

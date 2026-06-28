@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { Sparkles } from 'lucide-react';
 import type { Role, Severity } from './data';
+import type { NexReply } from './nexbrain';
 
 export type Theme = 'light' | 'dark';
 export interface User { name: string; role: Role; }
+export interface ChatMsg extends Partial<NexReply> { who: 'u' | 'n'; text: string; }
 
 interface AppCtx {
   theme: Theme;
@@ -24,6 +26,13 @@ interface AppCtx {
   aiSeed: string | null;
   openAi: (seed?: string) => void;
   closeAi: () => void;
+  /** Full conversational NEX — an alternative way to drive the whole platform. */
+  chatLog: ChatMsg[];
+  setChatLog: (fn: (prev: ChatMsg[]) => ChatMsg[]) => void;
+  /** Open the full chat page, optionally seeding a first question. */
+  openChat: (q?: string) => void;
+  pendingAsk: string | null;
+  clearPendingAsk: () => void;
   toast: (msg: string) => void;
 }
 
@@ -42,6 +51,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [cmdOpen, setCmdOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiSeed, setAiSeed] = useState<string | null>(null);
+  const [chatLog, setChatLog] = useState<ChatMsg[]>([]);
+  const [pendingAsk, setPendingAsk] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,6 +64,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const closeObject = () => setObjStudent(null);
   const openAi = (seed?: string) => { setAiSeed(seed ?? null); setAiOpen(true); };
   const closeAi = () => setAiOpen(false);
+  const openChat = (q?: string) => { if (q) setPendingAsk(q); setAiOpen(false); setPage('chat'); };
+  const clearPendingAsk = () => setPendingAsk(null);
 
   const toast = (msg: string) => {
     setToastMsg(msg);
@@ -60,7 +73,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, aiOpen, aiSeed, openAi, closeAi, toast }}>
+    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, aiOpen, aiSeed, openAi, closeAi, chatLog, setChatLog, openChat, pendingAsk, clearPendingAsk, toast }}>
       {children}
       {toastMsg && <div className="toast fade"><Sparkles size={15} style={{ color: 'var(--ai)' }} />{toastMsg}</div>}
     </Ctx.Provider>
