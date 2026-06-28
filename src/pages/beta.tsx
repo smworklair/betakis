@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import {
   Search, Send, Paperclip, FileText, Download, Upload, Bell, Heart, MessageCircle,
-  Share2, BookOpen, GraduationCap, Library, Rss, Star, Megaphone, Sparkles,
+  Share2, BookOpen, GraduationCap, Library, Rss, Star, Megaphone, Sparkles, ChevronLeft,
 } from 'lucide-react';
-import { PageHead, Chip, Avatar, Beta, NexAsk, useApp } from '../ui';
+import { PageHead, Chip, Avatar, Beta, NexAsk, useApp, useIsMobile } from '../ui';
 
 function BetaNote({ text }: { text: string }) {
   return (
@@ -29,39 +29,66 @@ const MSGS = [
 
 export function Messenger() {
   const { toast } = useApp();
-  const [active, setActive] = useState(1);
+  const isMobile = useIsMobile();
+  const [active, setActive] = useState<number | null>(isMobile ? null : 1);
   const [text, setText] = useState('');
-  const thread = THREADS.find((t) => t.id === active)!;
+  const thread = THREADS.find((t) => t.id === active) || THREADS[0];
+
+  const List = (
+    <div className="msgr-list">
+      <div className="msgr-search"><Search size={15} /><input placeholder="Поиск чатов…" /></div>
+      {THREADS.map((t) => (
+        <div key={t.id} className={`msgr-thread ${t.id === active ? 'active' : ''}`} onClick={() => setActive(t.id)}>
+          <Avatar name={t.name} />
+          <div className="msgr-thread-main">
+            <div className="t"><b>{t.name}</b><span className="dim">{t.time}</span></div>
+            <div className="m">{t.last}</div>
+          </div>
+          {t.unread > 0 && <span className="msgr-badge">{t.unread}</span>}
+        </div>
+      ))}
+    </div>
+  );
+
+  const Conv = (
+    <div className="msgr-conv">
+      <div className="msgr-conv-head">
+        {isMobile && <button className="icon-btn" onClick={() => setActive(null)} aria-label="Назад"><ChevronLeft size={20} /></button>}
+        <Avatar name={thread.name} />
+        <div><b>{thread.name}</b><div className="dim" style={{ fontSize: 12 }}>{thread.role}</div></div>
+      </div>
+      <div className="msgr-msgs">
+        {MSGS.map((m, i) => <div key={i} className={`msgr-bubble ${m.me ? 'me' : ''}`}>{m.t}<span className="msgr-time">{m.time}</span></div>)}
+      </div>
+      <form className="msgr-input" onSubmit={(e) => { e.preventDefault(); if (text.trim()) { toast('Отправка — бета'); setText(''); } }}>
+        <button type="button" className="ci-tool" title="Файл · бета" onClick={() => toast('Файлы — бета')}><Paperclip size={16} /></button>
+        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Сообщение…" />
+        <button className="ask-send sm" type="submit" aria-label="Отправить"><Send size={15} /></button>
+      </form>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div className="fade content-narrow">
+        <PageHead title="Мессенджер" sub="Внутренние переписки" actions={<Beta />} />
+        {active === null ? (
+          <>
+            <BetaNote text="Общение между сотрудниками, группами и студентами в одном месте." />
+            <div className="card msgr-mobile">{List}</div>
+          </>
+        ) : (
+          <div className="card msgr-mobile conv">{Conv}</div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="fade content-narrow">
       <PageHead title="Мессенджер" sub="Внутренние переписки" actions={<Beta />} />
       <BetaNote text="Общение между сотрудниками, группами и студентами в одном месте." />
-      <div className="card msgr">
-        <div className="msgr-list">
-          <div className="msgr-search"><Search size={15} /><input placeholder="Поиск чатов…" /></div>
-          {THREADS.map((t) => (
-            <div key={t.id} className={`msgr-thread ${t.id === active ? 'active' : ''}`} onClick={() => setActive(t.id)}>
-              <Avatar name={t.name} />
-              <div className="msgr-thread-main">
-                <div className="t"><b>{t.name}</b><span className="dim">{t.time}</span></div>
-                <div className="m">{t.last}</div>
-              </div>
-              {t.unread > 0 && <span className="msgr-badge">{t.unread}</span>}
-            </div>
-          ))}
-        </div>
-        <div className="msgr-conv">
-          <div className="msgr-conv-head"><Avatar name={thread.name} /><div><b>{thread.name}</b><div className="dim" style={{ fontSize: 12 }}>{thread.role}</div></div></div>
-          <div className="msgr-msgs">
-            {MSGS.map((m, i) => <div key={i} className={`msgr-bubble ${m.me ? 'me' : ''}`}>{m.t}<span className="msgr-time">{m.time}</span></div>)}
-          </div>
-          <form className="msgr-input" onSubmit={(e) => { e.preventDefault(); if (text.trim()) { toast('Отправка — бета'); setText(''); } }}>
-            <button type="button" className="ci-tool" title="Файл · бета" onClick={() => toast('Файлы — бета')}><Paperclip size={16} /></button>
-            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Сообщение…" />
-            <button className="ask-send sm" type="submit" aria-label="Отправить"><Send size={15} /></button>
-          </form>
-        </div>
-      </div>
+      <div className="card msgr">{List}{Conv}</div>
     </div>
   );
 }
