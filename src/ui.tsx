@@ -23,12 +23,12 @@ interface AppCtx {
   closeObject: () => void;
   cmdOpen: boolean;
   setCmdOpen: (v: boolean) => void;
-  /** In-page AI panel that splits the page (expands it, works WITH it). */
-  dockOpen: boolean;
-  dockSeed: string | null;
-  dockTitle: string | null;
-  openDock: (seed?: string, title?: string) => void;
-  closeDock: () => void;
+  /** In-page inline panel: opens in the page flow, under the clicked block. */
+  inlineHost: HTMLElement | null;
+  inlineSeed: string | null;
+  inlineTitle: string | null;
+  openInlineAt: (host: HTMLElement | null, seed?: string, title?: string) => void;
+  closeInline: () => void;
   /** Navigation sidebar can be disabled (AI-first mode) — persisted setting. */
   sidebarEnabled: boolean;
   setSidebarEnabled: (v: boolean) => void;
@@ -62,9 +62,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [page, setPage] = useState('dashboard');
   const [objStudent, setObjStudent] = useState<number | null>(null);
   const [cmdOpen, setCmdOpen] = useState(false);
-  const [dockOpen, setDockOpen] = useState(false);
-  const [dockSeed, setDockSeed] = useState<string | null>(null);
-  const [dockTitle, setDockTitle] = useState<string | null>(null);
+  const [inlineHost, setInlineHost] = useState<HTMLElement | null>(null);
+  const [inlineSeed, setInlineSeed] = useState<string | null>(null);
+  const [inlineTitle, setInlineTitle] = useState<string | null>(null);
   const [sidebarEnabled, setSidebarEnabledState] = useState<boolean>(() => localStorage.getItem('nex-sidebar') !== 'off');
   const [navOpen, setNavOpen] = useState(false);
   const [explain, setExplain] = useState<ExplainReq | null>(null);
@@ -79,9 +79,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const openStudent = (id: number) => setObjStudent(id);
   const closeObject = () => setObjStudent(null);
-  const openDock = (seed?: string, title?: string) => { setDockSeed(seed ?? null); setDockTitle(title ?? null); setExplain(null); setDockOpen(true); };
-  const closeDock = () => setDockOpen(false);
-  const openChat = (q?: string) => { if (q) setPendingAsk(q); setDockOpen(false); setNavOpen(false); setPage('chat'); };
+  const openInlineAt = (host: HTMLElement | null, seed?: string, title?: string) => { setExplain(null); setInlineSeed(seed ?? null); setInlineTitle(title ?? null); setInlineHost(host); };
+  const closeInline = () => setInlineHost(null);
+  const openChat = (q?: string) => { if (q) setPendingAsk(q); setInlineHost(null); setNavOpen(false); setPage('chat'); };
   const clearPendingAsk = () => setPendingAsk(null);
   const setSidebarEnabled = (v: boolean) => { setSidebarEnabledState(v); localStorage.setItem('nex-sidebar', v ? 'on' : 'off'); };
   const openExplain = (r: ExplainReq) => setExplain(r);
@@ -93,7 +93,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, dockOpen, dockSeed, dockTitle, openDock, closeDock, sidebarEnabled, setSidebarEnabled, navOpen, setNavOpen, explain, openExplain, closeExplain, chatLog, setChatLog, openChat, pendingAsk, clearPendingAsk, toast }}>
+    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, inlineHost, inlineSeed, inlineTitle, openInlineAt, closeInline, sidebarEnabled, setSidebarEnabled, navOpen, setNavOpen, explain, openExplain, closeExplain, chatLog, setChatLog, openChat, pendingAsk, clearPendingAsk, toast }}>
       {children}
       {toastMsg && <div className="toast fade"><Sparkles size={15} style={{ color: 'var(--ai)' }} />{toastMsg}</div>}
     </Ctx.Provider>
@@ -117,10 +117,15 @@ export function Chip({ tone, children }: { tone: string; children: ReactNode }) 
     charts, reports. Hands the context off to the full conversational NEX.
     AI is present everywhere as an option, never in the way. */
 export function NexAsk({ q, label = 'Спросить NEX', subtle = true }: { q: string; label?: string; subtle?: boolean }) {
-  const { openDock } = useApp();
+  const { openInlineAt } = useApp();
   return (
-    <button className={`nex-ask-chip ${subtle ? 'subtle' : ''}`} title="NEX откроет панель рядом со страницей"
-      onClick={(e) => { e.stopPropagation(); openDock(q, label); }}>
+    <button className={`nex-ask-chip ${subtle ? 'subtle' : ''}`} title="NEX раскроется прямо здесь"
+      onClick={(e) => {
+        e.stopPropagation();
+        const el = e.currentTarget as HTMLElement;
+        const host = (el.closest('.ai-card, .card, .fade') as HTMLElement) || el.parentElement;
+        openInlineAt(host, q, label);
+      }}>
       <Sparkles size={12} /> {label}
     </button>
   );
