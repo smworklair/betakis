@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Sparkles, AlertTriangle, FileText } from 'lucide-react';
-import { PageHead, Chip, NexAsk, useApp } from '../ui';
+import { PageHead, Chip, NexAsk, Soon, useApp } from '../ui';
 import { admissions, finance } from '../data';
 
 export function Admissions() {
@@ -8,7 +8,7 @@ export function Admissions() {
   const [tab, setTab] = useState<'apps' | 'reg' | 'stats'>('apps');
   return (
     <div className="fade content-narrow">
-      <PageHead title="Приём" sub="Приёмная кампания 2024" actions={<button className="btn btn-primary" onClick={() => toast('Регистрация заявления')}><Plus size={15} />Заявление</button>} />
+      <PageHead title="Приём" sub="Приёмная кампания 2024" actions={<><Soon /><button className="btn btn-primary" onClick={() => toast('Функция в разработке')}><Plus size={15} />Заявление</button></>} />
 
       <div className="seg" style={{ marginBottom: 16 }}>
         <button className={tab === 'apps' ? 'on' : ''} onClick={() => setTab('apps')}>Заявления</button>
@@ -48,7 +48,7 @@ export function Admissions() {
           <div><label className="field-label">Специальность</label><select className="select"><option>Прикладная информатика</option><option>Информационные системы</option><option>Экономика и бухучёт</option></select></div>
           <div><label className="field-label">Средний балл аттестата</label><input className="input" placeholder="0.00" /></div>
           <div><label className="field-label">Телефон</label><input className="input" placeholder="+7 ___ ___-__-__" /></div>
-          <div style={{ gridColumn: '1 / -1' }}><button className="btn btn-primary" onClick={() => toast('Заявление зарегистрировано')}>Зарегистрировать</button></div>
+          <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 10 }}><button className="btn btn-primary" onClick={() => toast('Функция в разработке')}>Зарегистрировать</button><Soon /></div>
         </div></div>
       )}
       {tab === 'stats' && (
@@ -63,11 +63,12 @@ export function Admissions() {
 }
 
 export function Finance() {
+  const { toast } = useApp();
   const tone = (s: string) => (s === 'Оплачено' ? 'chip-success' : s === 'Просрочено' ? 'chip-danger' : 'chip-warn');
   const total = finance.payments.reduce((a, p) => a + (p.status === 'Оплачено' ? p.sum : 0), 0);
   return (
     <div className="fade content-narrow">
-      <PageHead title="Финансы" sub="Платежи и задолженность" actions={<button className="btn btn-outline"><FileText size={15} />Экспорт</button>} />
+      <PageHead title="Финансы" sub="Платежи и задолженность" actions={<><Soon /><button className="btn btn-outline" onClick={() => toast('Функция в разработке')}><FileText size={15} />Экспорт</button></>} />
 
       <div className="grid cols-3" style={{ marginBottom: 16 }}>
         <div className="kpi"><div className="kpi-label">Поступило</div><div className="kpi-value">₽ {total.toLocaleString('ru')}</div></div>

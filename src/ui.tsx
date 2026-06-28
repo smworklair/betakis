@@ -22,10 +22,17 @@ interface AppCtx {
   cmdOpen: boolean;
   setCmdOpen: (v: boolean) => void;
   /** Ambient, on-demand AI layer (Cmd+E) — secondary, surfaces only when useful. */
+  /** In-page NEX workspace (мини-пространство) — dockable AI you work in. */
   aiOpen: boolean;
   aiSeed: string | null;
   openAi: (seed?: string) => void;
   closeAi: () => void;
+  /** Navigation sidebar can be disabled (AI-first mode) — persisted setting. */
+  sidebarEnabled: boolean;
+  setSidebarEnabled: (v: boolean) => void;
+  /** Transient: slide-over nav open (mobile, or when sidebar disabled). */
+  navOpen: boolean;
+  setNavOpen: (v: boolean) => void;
   /** Full conversational NEX — an alternative way to drive the whole platform. */
   chatLog: ChatMsg[];
   setChatLog: (fn: (prev: ChatMsg[]) => ChatMsg[]) => void;
@@ -51,6 +58,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [cmdOpen, setCmdOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiSeed, setAiSeed] = useState<string | null>(null);
+  const [sidebarEnabled, setSidebarEnabledState] = useState<boolean>(() => localStorage.getItem('nex-sidebar') !== 'off');
+  const [navOpen, setNavOpen] = useState(false);
   const [chatLog, setChatLog] = useState<ChatMsg[]>([]);
   const [pendingAsk, setPendingAsk] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -64,8 +73,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const closeObject = () => setObjStudent(null);
   const openAi = (seed?: string) => { setAiSeed(seed ?? null); setAiOpen(true); };
   const closeAi = () => setAiOpen(false);
-  const openChat = (q?: string) => { if (q) setPendingAsk(q); setAiOpen(false); setPage('chat'); };
+  const openChat = (q?: string) => { if (q) setPendingAsk(q); setAiOpen(false); setNavOpen(false); setPage('chat'); };
   const clearPendingAsk = () => setPendingAsk(null);
+  const setSidebarEnabled = (v: boolean) => { setSidebarEnabledState(v); localStorage.setItem('nex-sidebar', v ? 'on' : 'off'); };
 
   const toast = (msg: string) => {
     setToastMsg(msg);
@@ -73,7 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, aiOpen, aiSeed, openAi, closeAi, chatLog, setChatLog, openChat, pendingAsk, clearPendingAsk, toast }}>
+    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, aiOpen, aiSeed, openAi, closeAi, sidebarEnabled, setSidebarEnabled, navOpen, setNavOpen, chatLog, setChatLog, openChat, pendingAsk, clearPendingAsk, toast }}>
       {children}
       {toastMsg && <div className="toast fade"><Sparkles size={15} style={{ color: 'var(--ai)' }} />{toastMsg}</div>}
     </Ctx.Provider>
@@ -134,6 +144,11 @@ export function AskHero() {
       </div>
     </div>
   );
+}
+
+/** Marks a feature that isn't wired up yet. */
+export function Soon() {
+  return <span className="soon-badge" title="Эта функция пока в разработке">в разработке</span>;
 }
 
 export function Avatar({ name }: { name: string }) {

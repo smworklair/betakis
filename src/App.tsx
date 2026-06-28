@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef, type ReactNode, type FormEvent, t
 import {
   LayoutDashboard, Users, School, ClipboardList, Calendar, BookOpen, CheckSquare,
   Wallet, Award, Briefcase, BarChart3, GraduationCap, ShieldCheck, Settings as SettingsIcon,
-  Bell, Sparkles, Lock, User as UserIcon, ArrowRight,
+  Bell, Sparkles, Lock, User as UserIcon, ArrowRight, Menu, X,
   type LucideIcon,
 } from 'lucide-react';
 import { useApp, type User } from './ui';
@@ -227,17 +227,19 @@ function NexOmni() {
 
 /* ===================== Shell ===================== */
 function Shell() {
-  const { user, page, setPage } = useApp();
+  const { user, page, setPage, sidebarEnabled, navOpen, setNavOpen, aiOpen, openAi, closeAi } = useApp();
 
   if (!user) return null;
   const title = META[page]?.label || 'NEX';
+  const nav = (id: string) => { setPage(id); setNavOpen(false); };
 
   return (
-    <div className="shell">
+    <div className={`shell ${sidebarEnabled ? '' : 'no-sidebar'} ${navOpen ? 'nav-open' : ''}`}>
       <aside className="sidebar">
         <div className="sidebar-brand">
           <div className="brand-mark">N</div>
           <div className="brand-text"><b>NEX</b><span>КИС Колледж</span></div>
+          <button className="icon-btn nav-close" onClick={() => setNavOpen(false)} aria-label="Закрыть меню"><X size={18} /></button>
         </div>
         <nav className="sidebar-nav">
           {NAV.map((grp) => {
@@ -249,7 +251,7 @@ function Shell() {
                 {items.map((id) => {
                   const Icon = META[id].icon;
                   return (
-                    <div key={id} className={`nav-item ${page === id ? 'active' : ''}`} onClick={() => setPage(id)} title={META[id].label}>
+                    <div key={id} className={`nav-item ${page === id ? 'active' : ''}`} onClick={() => nav(id)} title={META[id].label}>
                       <Icon size={17} /><span>{META[id].label}</span>
                       {id === 'security' && user.role === 'admin' && <span className="nav-badge">2</span>}
                     </div>
@@ -260,17 +262,21 @@ function Shell() {
           })}
         </nav>
         <div className="sidebar-foot">
-          <div className={`nav-item ${page === 'settings' ? 'active' : ''}`} onClick={() => setPage('settings')}>
+          <div className={`nav-item ${page === 'settings' ? 'active' : ''}`} onClick={() => nav('settings')}>
             <SettingsIcon size={17} /><span>Настройки</span>
           </div>
         </div>
       </aside>
 
+      {navOpen && <div className="nav-backdrop" onClick={() => setNavOpen(false)} />}
+
       <div className="main">
         <header className="topbar">
-          <strong style={{ fontSize: 14, fontWeight: 600 }}>{title}</strong>
+          <button className="icon-btn nav-toggle" onClick={() => setNavOpen(true)} aria-label="Меню"><Menu size={18} /></button>
+          <strong className="topbar-title" style={{ fontSize: 14, fontWeight: 600 }}>{title}</strong>
           <NexOmni />
-          <button className="icon-btn" onClick={() => setPage('dashboard')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
+          <button className={`icon-btn ai-toggle ${aiOpen ? 'on' : ''}`} onClick={() => (aiOpen ? closeAi() : openAi())} title="Пространство NEX" aria-label="Пространство NEX"><Sparkles size={18} /></button>
+          <button className="icon-btn topbar-bell" onClick={() => nav('dashboard')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
           <div className="avatar" title={`${user.name} · ${roleLabel[user.role]}`}>{(user.name[0] || 'U').toUpperCase()}</div>
         </header>
         <div className={`content ${page === 'chat' ? 'content-flush' : ''}`}>{renderPage(page)}</div>

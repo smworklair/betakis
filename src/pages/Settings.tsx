@@ -1,9 +1,9 @@
-import { Sun, Moon, ShieldCheck, KeyRound, Sparkles, LogOut } from 'lucide-react';
-import { PageHead, Chip, Avatar, useApp } from '../ui';
+import { Sun, Moon, ShieldCheck, KeyRound, Sparkles, LogOut, PanelLeft } from 'lucide-react';
+import { PageHead, Chip, Avatar, Soon, useApp } from '../ui';
 import { roleLabel } from '../data';
 
 export default function Settings() {
-  const { theme, setTheme, user, setUser, toast } = useApp();
+  const { theme, setTheme, user, setUser, sidebarEnabled, setSidebarEnabled, openAi, toast } = useApp();
   return (
     <div className="fade content-narrow" style={{ maxWidth: 760 }}>
       <PageHead title="Настройки" sub="Профиль, оформление и безопасность" />
@@ -36,21 +36,43 @@ export default function Settings() {
         </div>
       </div>
 
+      {/* Navigation & AI architecture */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-head"><div className="card-title"><PanelLeft size={15} /> Навигация и ИИ</div></div>
+        <div className="card-body" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14 }}>
+          <div>
+            <div style={{ fontWeight: 600 }}>Боковая панель</div>
+            <div className="muted" style={{ fontSize: 13 }}>Можно отключить и работать в ИИ-режиме: навигация и задачи — через NEX (строка вверху и пространство NEX).</div>
+          </div>
+          <div className="seg">
+            <button className={sidebarEnabled ? 'on' : ''} onClick={() => setSidebarEnabled(true)}>Вкл</button>
+            <button className={!sidebarEnabled ? 'on' : ''} onClick={() => setSidebarEnabled(false)}>Выкл</button>
+          </div>
+        </div>
+        <div className="card-body" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, borderTop: '1px solid var(--border)' }}>
+          <div>
+            <div style={{ fontWeight: 600 }}>Пространство NEX</div>
+            <div className="muted" style={{ fontSize: 13 }}>Мини-пространство ИИ прямо на странице — открывается кнопкой <Sparkles size={12} style={{ color: 'var(--ai)', verticalAlign: 'middle' }} /> вверху, рядом с любым экраном.</div>
+          </div>
+          <button className="btn btn-sm btn-primary" onClick={() => openAi()}><Sparkles size={14} />Открыть</button>
+        </div>
+      </div>
+
       {/* Security */}
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-head"><div className="card-title"><ShieldCheck size={15} /> Безопасность</div></div>
         <div className="row-list">
           <div className="feed-row" style={{ alignItems: 'center' }}>
             <div className="feed-ico"><KeyRound size={14} /></div>
-            <div className="feed-main"><div className="t">Двухфакторная аутентификация</div><div className="m">Дополнительный код при входе</div></div>
+            <div className="feed-main"><div className="t">Двухфакторная аутентификация <Soon /></div><div className="m">Дополнительный код при входе</div></div>
             <Chip tone="chip-warn">не настроена</Chip>
-            <button className="btn btn-sm btn-outline" onClick={() => toast('Настройка 2FA')}>Включить</button>
+            <button className="btn btn-sm btn-outline" onClick={() => toast('Функция в разработке')}>Включить</button>
           </div>
           <div className="feed-row" style={{ alignItems: 'center' }}>
             <div className="feed-ico"><ShieldCheck size={14} /></div>
-            <div className="feed-main"><div className="t">Пароль</div><div className="m">Последнее изменение: 14 дней назад</div></div>
+            <div className="feed-main"><div className="t">Пароль <Soon /></div><div className="m">Последнее изменение: 14 дней назад</div></div>
             <Chip tone="chip-success">надёжный</Chip>
-            <button className="btn btn-sm btn-outline" onClick={() => toast('Смена пароля')}>Сменить</button>
+            <button className="btn btn-sm btn-outline" onClick={() => toast('Функция в разработке')}>Сменить</button>
           </div>
         </div>
       </div>

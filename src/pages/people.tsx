@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Search, Plus, Users } from 'lucide-react';
-import { PageHead, Chip, Avatar, AiInsightCard, NexAsk, useApp } from '../ui';
+import { PageHead, Chip, Avatar, AiInsightCard, NexAsk, Soon, useApp } from '../ui';
 import { students, groups, staff } from '../data';
 
 const statusTone = (s: string) => (s === 'Обучается' || s === 'Активен' ? 'chip-success' : s === 'Академический отпуск' || s === 'Отпуск' ? 'chip-warn' : 'chip-neutral');
@@ -18,7 +18,7 @@ export function Students() {
       <PageHead
         title="Студенты"
         sub={`Всего ${students.length} · отсортированы по релевантности`}
-        actions={<button className="btn btn-primary" onClick={() => toast('Открыта карточка создания')}><Plus size={15} />Добавить</button>}
+        actions={<><Soon /><button className="btn btn-primary" onClick={() => toast('Функция в разработке')}><Plus size={15} />Добавить</button></>}
       />
 
       <div style={{ marginBottom: 16 }}>
@@ -74,7 +74,7 @@ export function Groups() {
   const { toast } = useApp();
   return (
     <div className="fade content-narrow">
-      <PageHead title="Группы" sub={`${groups.length} учебных групп`} actions={<button className="btn btn-primary" onClick={() => toast('Создание группы')}><Plus size={15} />Новая группа</button>} />
+      <PageHead title="Группы" sub={`${groups.length} учебных групп`} actions={<><NexAsk q="Сравни группы: численность, успеваемость, риски" label="Сравнить группы" /><Soon /><button className="btn btn-primary" onClick={() => toast('Функция в разработке')}><Plus size={15} />Новая группа</button></>} />
       <div className="grid cols-2">
         {groups.map((g) => (
           <div className="card" key={g.id}>
@@ -100,9 +100,10 @@ export function Groups() {
 }
 
 export function Staff() {
+  const { toast } = useApp();
   return (
     <div className="fade content-narrow">
-      <PageHead title="Сотрудники" sub={`${staff.length} сотрудников`} actions={<button className="btn btn-primary"><Plus size={15} />Добавить</button>} />
+      <PageHead title="Сотрудники" sub={`${staff.length} сотрудников`} actions={<><NexAsk q="Проанализируй нагрузку сотрудников и где есть перекос" label="Анализ нагрузки" /><Soon /><button className="btn btn-primary" onClick={() => toast('Функция в разработке')}><Plus size={15} />Добавить</button></>} />
       <div className="card">
         <div className="table-wrap">
           <table className="tbl">
