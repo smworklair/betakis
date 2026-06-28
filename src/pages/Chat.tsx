@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import {
   Sparkles, ArrowUp, ArrowRight, ShieldAlert, Wallet, AlertTriangle,
-  Activity, GraduationCap, Calendar, Users, RotateCcw,
+  Activity, GraduationCap, Calendar, Users, Plus, Copy, ThumbsUp, ThumbsDown,
+  GitBranch, Paperclip, Boxes, AtSign, Check,
 } from 'lucide-react';
 import { useApp, Chip } from '../ui';
 import { nexReply, atRisk, type NexData, type NavLink } from '../nexbrain';
 import { finance } from '../data';
 import { Donut, Legend, type Segment } from '../charts';
 
-/* Suggested entry prompts — grouped so the chat reads as a way to run the whole platform. */
 const SUGGEST: { icon: typeof Sparkles; label: string; q: string }[] = [
   { icon: Activity, label: 'Что сегодня важно?', q: 'Что сегодня важно?' },
   { icon: AlertTriangle, label: 'Студенты в зоне риска', q: 'Покажи студентов в зоне риска' },
@@ -17,6 +17,9 @@ const SUGGEST: { icon: typeof Sparkles; label: string; q: string }[] = [
   { icon: GraduationCap, label: 'Готовность к выпуску', q: 'Какая готовность к выпуску?' },
   { icon: Calendar, label: 'Окна в расписании', q: 'Покажи окна в расписании' },
 ];
+
+/* Sections that can be pulled into context via "@" */
+const MENTIONS = ['Студенты', 'Финансы', 'Безопасность', 'Расписание', 'Аналитика', 'Посещаемость'];
 
 function DataBlock({ kind }: { kind: NexData }) {
   const { setPage, openStudent } = useApp();
@@ -53,7 +56,6 @@ function DataBlock({ kind }: { kind: NexData }) {
       </div>
     );
   }
-  // kpi
   return (
     <div className="chat-data kpi-row" onClick={() => setPage('analytics')} style={{ cursor: 'pointer' }}>
       <div className="kpi"><div className="kpi-label">Студентов</div><div className="kpi-value">100</div></div>
@@ -80,6 +82,9 @@ function NavChips({ nav }: { nav: NavLink[] }) {
 export default function Chat() {
   const { user, chatLog, setChatLog, pendingAsk, clearPendingAsk, toast } = useApp();
   const [input, setInput] = useState('');
+  const [fb, setFb] = useState<Record<number, 'up' | 'down'>>({});
+  const [copied, setCopied] = useState<number | null>(null);
+  const [mentionOpen, setMentionOpen] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
 
   const send = (q: string) => {
@@ -90,7 +95,6 @@ export default function Chat() {
     setInput('');
   };
 
-  // Pick up a question handed over from the topbar / mini-panel.
   useEffect(() => {
     if (pendingAsk) { send(pendingAsk); clearPendingAsk(); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -100,6 +104,12 @@ export default function Chat() {
 
   const submit = (e: FormEvent) => { e.preventDefault(); send(input); };
   const empty = chatLog.length === 0;
+
+  const newChat = () => { setChatLog(() => []); setFb({}); setInput(''); };
+  const copy = (text: string, i: number) => { navigator.clipboard?.writeText(text); setCopied(i); setTimeout(() => setCopied((c) => (c === i ? null : c)), 1400); };
+  const rate = (i: number, v: 'up' | 'down') => { setFb((f) => ({ ...f, [i]: f[i] === v ? undefined as never : v })); toast(v === 'up' ? 'Спасибо за оценку' : 'Учту — отвечу лучше'); };
+  const branch = (text: string) => { setChatLog(() => []); setFb({}); toast('Новая ветка от этого ответа'); setTimeout(() => send(text), 0); };
+  const addMention = (m: string) => { setInput((s) => `${s}@${m} `.replace(/\s+@/, ' @').trimStart()); setMentionOpen(false); };
 
   return (
     <div className="chat-page fade">
@@ -128,7 +138,12 @@ export default function Chat() {
           <div className="chat-thread">
             <div className="chat-thread-inner">
               {chatLog.map((m, i) => m.who === 'u' ? (
-                <div className="chat-msg u" key={i}>{m.text}</div>
+                <div className="chat-row u" key={i}>
+                  <div className="chat-msg u">{m.text}</div>
+                  <div className="msg-tools u">
+                    <button title="Ветка в новом чате" onClick={() => branch(m.text)}><GitBranch size={13} /></button>
+                  </div>
+                </div>
               ) : (
                 <div className="chat-msg n" key={i}>
                   <div className="ava"><Sparkles size={15} /></div>
@@ -142,6 +157,12 @@ export default function Chat() {
                         <span className="dim" style={{ fontSize: 11.5 }}>с подтверждением и аудитом</span>
                       </div>
                     )}
+                    <div className="msg-tools">
+                      <button title="Скопировать" onClick={() => copy(m.text, i)}>{copied === i ? <Check size={13} /> : <Copy size={13} />}</button>
+                      <button className={fb[i] === 'up' ? 'on' : ''} title="Хороший ответ" onClick={() => rate(i, 'up')}><ThumbsUp size={13} /></button>
+                      <button className={fb[i] === 'down' ? 'on' : ''} title="Плохой ответ" onClick={() => rate(i, 'down')}><ThumbsDown size={13} /></button>
+                      <button title="Ветка в новом чате" onClick={() => branch(m.text)}><GitBranch size={13} /></button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -151,13 +172,26 @@ export default function Chat() {
 
           <div className="chat-dock">
             <div className="chat-dock-inner">
-              <button className="icon-btn" title="Очистить" onClick={() => setChatLog(() => [])}><RotateCcw size={17} /></button>
+              <button className="icon-btn" title="Новый чат" onClick={newChat}><Plus size={18} /></button>
               <form className="chat-input" onSubmit={submit}>
-                <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Спросите NEX…" />
+                <div className="chat-input-tools">
+                  <button type="button" className="ci-tool" title="Прикрепить файл · бета" onClick={() => toast('Файлы — бета, скоро')}><Paperclip size={16} /></button>
+                  <button type="button" className="ci-tool" title="Коннекторы · бета" onClick={() => toast('Коннекторы — бета, скоро')}><Boxes size={16} /></button>
+                  <div className="ci-mention">
+                    <button type="button" className="ci-tool" title="Добавить раздел в контекст (@)" onClick={() => setMentionOpen((v) => !v)}><AtSign size={16} /></button>
+                    {mentionOpen && (
+                      <div className="mention-pop">
+                        <div className="mention-h">Подключить раздел</div>
+                        {MENTIONS.map((m) => <button key={m} onClick={() => addMention(m)}><AtSign size={12} />{m}</button>)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Спросите NEX… ( @ — подключить раздел )" />
                 <button className="ask-send" type="submit" aria-label="Спросить"><ArrowUp size={18} /></button>
               </form>
             </div>
-            <div className="chat-dock-hint"><Users size={12} /> NEX отвечает по данным организации · действия проходят аудит</div>
+            <div className="chat-dock-hint"><Users size={12} /> NEX отвечает по данным организации · файлы и коннекторы — в бете</div>
           </div>
         </>
       )}

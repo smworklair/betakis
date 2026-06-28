@@ -3,14 +3,16 @@ import {
   LayoutDashboard, Users, School, ClipboardList, Calendar, BookOpen, CheckSquare,
   Wallet, Award, Briefcase, BarChart3, GraduationCap, ShieldCheck, Settings as SettingsIcon,
   Bell, Sparkles, Lock, User as UserIcon, ArrowRight, Menu, X,
+  MessageSquare, FileText, Rss, Compass,
   type LucideIcon,
 } from 'lucide-react';
-import { useApp, type User } from './ui';
+import { useApp, Beta, type User } from './ui';
 import { roleLabel, type Role } from './data';
 import { ContextDrawer } from './blocks';
 import { AiLayer } from './ai';
 
 import Chat from './pages/Chat';
+import { Messenger, NotificationsPage, Documents, Feed, Campus } from './pages/beta';
 import CommandCenter from './pages/CommandCenter';
 import { SecurityConsole } from './pages/Dashboard';
 import { Students, Groups, Staff } from './pages/people';
@@ -19,7 +21,7 @@ import { Admissions, Finance, Scholarship } from './pages/operations';
 import { Analytics, Graduation } from './pages/insights';
 import Settings from './pages/Settings';
 
-interface Meta { label: string; icon: LucideIcon; roles: Role[]; }
+interface Meta { label: string; icon: LucideIcon; roles: Role[]; beta?: boolean; }
 const ALL: Role[] = ['admin', 'teacher', 'accountant', 'student'];
 
 const META: Record<string, Meta> = {
@@ -37,6 +39,11 @@ const META: Record<string, Meta> = {
   analytics: { label: 'Аналитика', icon: BarChart3, roles: ['admin', 'teacher', 'accountant'] },
   graduation: { label: 'Выпуск', icon: GraduationCap, roles: ['admin', 'teacher'] },
   security: { label: 'Безопасность', icon: ShieldCheck, roles: ['admin'] },
+  messenger: { label: 'Мессенджер', icon: MessageSquare, roles: ['admin'], beta: true },
+  notifications: { label: 'Уведомления', icon: Bell, roles: ['admin'], beta: true },
+  documents: { label: 'Документы', icon: FileText, roles: ['admin'], beta: true },
+  feed: { label: 'Лента', icon: Rss, roles: ['admin'], beta: true },
+  campus: { label: 'Кампус', icon: Compass, roles: ['admin'], beta: true },
   settings: { label: 'Настройки', icon: SettingsIcon, roles: ALL },
 };
 
@@ -48,6 +55,7 @@ const NAV: { title: string; items: string[] }[] = [
   { title: 'Персонал', items: ['staff'] },
   { title: 'Аналитика', items: ['analytics', 'graduation'] },
   { title: 'Безопасность', items: ['security'] },
+  { title: 'Бета', items: ['messenger', 'notifications', 'documents', 'feed', 'campus'] },
 ];
 
 function renderPage(id: string): ReactNode {
@@ -66,6 +74,11 @@ function renderPage(id: string): ReactNode {
     case 'staff': return <Staff />;
     case 'analytics': return <Analytics />;
     case 'graduation': return <Graduation />;
+    case 'messenger': return <Messenger />;
+    case 'notifications': return <NotificationsPage />;
+    case 'documents': return <Documents />;
+    case 'feed': return <Feed />;
+    case 'campus': return <Campus />;
     case 'settings': return <Settings />;
     default: return <CommandCenter />;
   }
@@ -227,7 +240,7 @@ function NexOmni() {
 
 /* ===================== Shell ===================== */
 function Shell() {
-  const { user, page, setPage, sidebarEnabled, navOpen, setNavOpen, openChat } = useApp();
+  const { user, page, setPage, sidebarEnabled, navOpen, setNavOpen } = useApp();
 
   if (!user) return null;
   const title = META[page]?.label || 'NEX';
@@ -253,6 +266,7 @@ function Shell() {
                   return (
                     <div key={id} className={`nav-item ${page === id ? 'active' : ''}`} onClick={() => nav(id)} title={META[id].label}>
                       <Icon size={17} /><span>{META[id].label}</span>
+                      {META[id].beta && <Beta />}
                       {id === 'security' && user.role === 'admin' && <span className="nav-badge">2</span>}
                     </div>
                   );
@@ -275,8 +289,7 @@ function Shell() {
           <button className="icon-btn nav-toggle" onClick={() => setNavOpen(true)} aria-label="Меню"><Menu size={18} /></button>
           <strong className="topbar-title" style={{ fontSize: 14, fontWeight: 600 }}>{title}</strong>
           <NexOmni />
-          <button className="icon-btn ai-toggle" onClick={() => openChat()} title="Открыть чат NEX" aria-label="Чат NEX"><Sparkles size={18} /></button>
-          <button className="icon-btn topbar-bell" onClick={() => nav('dashboard')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
+          <button className="icon-btn topbar-bell" onClick={() => nav('notifications')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
           <div className="avatar" title={`${user.name} · ${roleLabel[user.role]}`}>{(user.name[0] || 'U').toUpperCase()}</div>
         </header>
         <div className={`content ${page === 'chat' ? 'content-flush' : ''}`}>{renderPage(page)}</div>

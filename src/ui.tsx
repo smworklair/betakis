@@ -167,6 +167,11 @@ export function Soon() {
   return <span className="soon-badge" title="Эта функция пока в разработке">в разработке</span>;
 }
 
+/** Marks a whole section that exists but is an early beta. */
+export function Beta() {
+  return <span className="beta-badge" title="Бета-версия — данные демонстрационные">beta</span>;
+}
+
 export function Avatar({ name }: { name: string }) {
   const initials = name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   return <span className="avatar">{initials || '—'}</span>;
