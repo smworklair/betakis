@@ -93,6 +93,18 @@ export function Chip({ tone, children }: { tone: string; children: ReactNode }) 
   return <span className={`chip ${tone}`}><i className="ico" style={{ background: 'currentColor' }} />{children}</span>;
 }
 
+/** Unobtrusive "ask NEX about this" affordance — woven into cards, tables,
+    charts, reports. Hands the context off to the full conversational NEX.
+    AI is present everywhere as an option, never in the way. */
+export function NexAsk({ q, label = 'Спросить NEX', subtle = true }: { q: string; label?: string; subtle?: boolean }) {
+  const { openChat } = useApp();
+  return (
+    <button className={`nex-ask-chip ${subtle ? 'subtle' : ''}`} onClick={(e) => { e.stopPropagation(); openChat(q); }} title="Открыть в чате NEX">
+      <Sparkles size={12} /> {label}
+    </button>
+  );
+}
+
 export function Avatar({ name }: { name: string }) {
   const initials = name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   return <span className="avatar">{initials || '—'}</span>;

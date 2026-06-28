@@ -3,7 +3,7 @@ import {
   Monitor, LogIn, AlertTriangle, Sparkles, Bell, Activity, ChevronRight, CheckCircle2,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useApp, Chip, Avatar, Sparkline, severityTone, severityLabel } from '../ui';
+import { useApp, Chip, Avatar, Sparkline, NexAsk, severityTone, severityLabel } from '../ui';
 import {
   sessions, auditEvents, failedLogins, failedLoginTrend, notifications, aiInsights,
   services, roleLabel, criticalActions, groups,
@@ -58,7 +58,7 @@ export function SecurityConsole() {
           <div className="card">
             <div className="card-head">
               <div className="card-title"><Activity size={15} /> Лента аудита</div>
-              <span className="dim" style={{ fontSize: 12 }}>люди и ИИ — в одном потоке</span>
+              <NexAsk q="Что необычного в ленте аудита за последнее время? На что обратить внимание?" label="Найти необычное" />
             </div>
             <div className="row-list" aria-live="polite">
               {auditEvents.map((e) => (
@@ -121,7 +121,7 @@ export function SecurityConsole() {
           <div className="card">
             <div className="card-head">
               <div className="card-title"><LogIn size={15} /> Неудачные попытки входа</div>
-              <Sparkline data={failedLoginTrend} color="var(--danger)" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><NexAsk q="Это атака подбора? Какие IP стоит заблокировать?" label="Оценить угрозу" /><Sparkline data={failedLoginTrend} color="var(--danger)" /></div>
             </div>
             <div className="row-list">
               {failedLogins.map((f) => (

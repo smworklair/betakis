@@ -1,5 +1,5 @@
 import { Sparkles, GraduationCap } from 'lucide-react';
-import { PageHead, Chip } from '../ui';
+import { PageHead, Chip, NexAsk } from '../ui';
 import { groups, gradesFor, finance } from '../data';
 import { Donut, Line, Legend, type Segment } from '../charts';
 
@@ -44,15 +44,15 @@ export function Analytics() {
         return (
           <div className="grid cols-3" style={{ marginBottom: 16 }}>
             <div className="card">
-              <div className="card-head"><div className="card-title">Распределение оценок</div></div>
+              <div className="card-head"><div className="card-title">Распределение оценок</div><NexAsk q="Разбери распределение оценок и где успеваемость проседает" label="Разобрать" /></div>
               <div className="card-body chart-flex"><Donut segments={gradeSegs} centerTop={gradeSegs.reduce((a, s) => a + s.value, 0)} centerSub="оценок" /><Legend segments={gradeSegs} withValues /></div>
             </div>
             <div className="card">
-              <div className="card-head"><div className="card-title">Посещаемость · динамика</div></div>
+              <div className="card-head"><div className="card-title">Посещаемость · динамика</div><NexAsk q="Объясни динамику посещаемости и спрогнозируй риск" label="Объяснить" /></div>
               <div className="card-body"><Line data={[88, 90, 91, 89, 92, 90, 91, 93, 92, 90, 89, 91]} min={80} max={100} /></div>
             </div>
             <div className="card">
-              <div className="card-head"><div className="card-title">Финансы</div></div>
+              <div className="card-head"><div className="card-title">Финансы</div><NexAsk q="Сформируй финансовую сводку: поступления, задолженность, риски" label="Сводка" /></div>
               <div className="card-body chart-flex"><Donut segments={finSegs} centerTop="₽" centerSub="период" /><Legend segments={finSegs} /></div>
             </div>
           </div>
@@ -60,7 +60,7 @@ export function Analytics() {
       })()}
 
       <div className="card">
-        <div className="card-head"><div className="card-title">Средний балл по группам</div></div>
+        <div className="card-head"><div className="card-title">Средний балл по группам</div><NexAsk q="Какие группы отстают по среднему баллу и почему?" label="Найти отстающих" /></div>
         <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {byGroup.map((b) => (
             <div key={b.name} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

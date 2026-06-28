@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Sparkles, AlertTriangle, FileText } from 'lucide-react';
-import { PageHead, Chip, useApp } from '../ui';
+import { PageHead, Chip, NexAsk, useApp } from '../ui';
 import { admissions, finance } from '../data';
 
 export function Admissions() {
@@ -78,10 +78,11 @@ export function Finance() {
       <div className="ai-card" style={{ marginBottom: 16, borderLeftColor: 'var(--warn)' }}>
         <div className="ai-head" style={{ color: 'var(--warn)' }}><AlertTriangle size={14} /> Аномалия в платежах</div>
         <div className="ai-body">Три перевода на нетипичную сумму от одного контрагента. Рекомендуется проверка перед закрытием периода.</div>
+        <div className="ai-actions"><NexAsk q="Покажи аномальные платежи и объясни, почему они помечены" label="Разобрать аномалию" subtle={false} /></div>
       </div>
 
       <div className="card">
-        <div className="card-head"><div className="card-title">Платежи</div></div>
+        <div className="card-head"><div className="card-title">Платежи</div><NexAsk q="Сформируй финансовый отчёт по платежам и задолженности за период" label="Собрать отчёт" /></div>
         <div className="table-wrap">
           <table className="tbl">
             <thead><tr><th>Студент</th><th>Группа</th><th className="right">Сумма</th><th>Дата</th><th>Способ</th><th>Статус</th></tr></thead>

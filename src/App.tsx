@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, type ReactNode, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, type ReactNode, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
   LayoutDashboard, Users, School, ClipboardList, Calendar, BookOpen, CheckSquare,
   Wallet, Award, Briefcase, BarChart3, GraduationCap, ShieldCheck, Settings as SettingsIcon,
@@ -151,28 +151,48 @@ function Login() {
 
 /* ===================== Command palette (quick, predictable navigation) ===================== */
 function CommandPalette() {
-  const { cmdOpen, setCmdOpen, setPage, user } = useApp();
+  const { cmdOpen, setCmdOpen, setPage, openChat, user } = useApp();
   const [q, setQ] = useState('');
   const items = useMemo(() => {
-    const ids = Object.keys(META).filter((id) => user && META[id].roles.includes(user.role));
+    const ids = Object.keys(META).filter((id) => id !== 'chat' && user && META[id].roles.includes(user.role));
     return ids.map((id) => ({ id, label: META[id].label })).filter((x) => x.label.toLowerCase().includes(q.toLowerCase()));
   }, [q, user]);
 
   useEffect(() => { if (!cmdOpen) setQ(''); }, [cmdOpen]);
   if (!cmdOpen) return null;
   const go = (id: string) => { setPage(id); setCmdOpen(false); };
+  const ask = () => { openChat(q.trim() || undefined); setCmdOpen(false); };
+
+  // Enter: if a section matches, jump to it; otherwise hand the query to NEX.
+  const onKey = (e: ReactKeyboardEvent) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (items.length > 0) go(items[0].id); else ask();
+  };
+
+  const hasQuery = q.trim().length > 0;
 
   return (
     <div className="cmd-overlay" onClick={() => setCmdOpen(false)}>
       <div className="cmd-modal" onClick={(e) => e.stopPropagation()}>
-        <input className="cmd-input" autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Перейти к разделу…" />
+        <input className="cmd-input" autoFocus value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKey} placeholder="Перейти к разделу или спросить NEX…" />
         <div className="cmd-list">
+          {/* NEX is a native option in the same surface — not a separate place */}
+          <div className="cmd-ask" onClick={ask}>
+            <span className="ic"><Sparkles size={17} /></span>
+            <span className="tx">
+              <b>{hasQuery ? `Спросить NEX: «${q.trim()}»` : 'Открыть чат NEX'}</b>
+              <span>{hasQuery ? 'ответит по данным и откроет нужный раздел' : 'полноценная альтернатива навигации'}</span>
+            </span>
+            <span className="hint">↵</span>
+          </div>
+
           <div className="cmd-section">Разделы</div>
           {items.map((it) => {
             const Icon = META[it.id].icon;
             return <div className="cmd-item" key={it.id} onClick={() => go(it.id)}><Icon size={16} />{it.label}<span className="hint">↵</span></div>;
           })}
-          {items.length === 0 && <div className="cmd-item dim">Ничего не найдено</div>}
+          {items.length === 0 && hasQuery && <div className="cmd-item dim">Раздел не найден — нажмите Enter, чтобы спросить NEX</div>}
         </div>
       </div>
     </div>
