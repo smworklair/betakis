@@ -495,3 +495,22 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; }
 .steer-bar input { flex: 1; height: 46px; border: 1px solid var(--border-2); border-radius: 13px; padding: 0 15px; background: var(--bg); color: var(--text); font-size: 14.5px; outline: none; }
 .steer-bar input:focus { border-color: var(--ai); box-shadow: 0 0 0 3px var(--ai-weak); }
 .steer-send { width: 46px; height: 46px; border-radius: 13px; border: none; background: var(--ai); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* ============================================================
+   Charts / diagrams
+   ============================================================ */
+.chart-flex { display: flex; align-items: center; gap: 18px; }
+.legend { display: flex; flex-direction: column; gap: 8px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-2); }
+.legend-item b { color: var(--text); margin-left: auto; padding-left: 14px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+.bars { display: flex; align-items: flex-end; gap: 12px; padding-top: 8px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; height: 100%; justify-content: flex-end; }
+.bar-v { font-size: 11px; font-weight: 700; color: var(--text); }
+.bar-track { width: 100%; max-width: 44px; flex: 1; background: var(--surface-2); border-radius: 6px 6px 0 0; display: flex; align-items: flex-end; overflow: hidden; }
+.bar-fill { width: 100%; border-radius: 6px 6px 0 0; min-height: 4px; transition: height .5s cubic-bezier(.2,0,0,1); }
+.bar-x { font-size: 11px; color: var(--text-3); }
+
+.legend-row { display: flex; flex-wrap: wrap; gap: 12px 18px; margin-top: 12px; }
+.legend-row .legend-item { font-size: 12px; }

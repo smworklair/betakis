@@ -5,9 +5,41 @@ import {
 } from 'lucide-react';
 import { useApp, Chip, Avatar, Sparkline, severityTone, severityLabel } from '../ui';
 import { AtRiskList } from '../blocks';
+import { Donut, Bars, Line, Legend, type Segment } from '../charts';
 import {
-  sessions, failedLogins, failedLoginTrend, notifications, auditEvents, roleLabel, type Severity,
+  sessions, failedLogins, failedLoginTrend, notifications, auditEvents, roleLabel,
+  groups, gradesFor, type Severity,
 } from '../data';
+
+function Charts() {
+  const dist: Record<number, number> = { 2: 0, 3: 0, 4: 0, 5: 0 };
+  groups.forEach((g) => Object.values(gradesFor(g.name)).forEach((row) => row.forEach((v) => { if (v >= 2 && v <= 5) dist[v]++; })));
+  const gradeSegs: Segment[] = [
+    { label: 'Отлично (5)', value: dist[5], color: 'var(--success)' },
+    { label: 'Хорошо (4)', value: dist[4], color: 'var(--accent)' },
+    { label: 'Удовл. (3)', value: dist[3], color: 'var(--warn)' },
+    { label: 'Неуд. (2)', value: dist[2], color: 'var(--danger)' },
+  ];
+  const total = gradeSegs.reduce((a, s) => a + s.value, 0);
+  const byGroup = groups.map((g) => ({ label: g.name, value: g.students }));
+  const attendanceTrend = [88, 90, 91, 89, 92, 90, 91, 93, 92, 90, 89, 91];
+  return (
+    <div className="grid cols-3" style={{ marginBottom: 18 }}>
+      <div className="card">
+        <div className="card-head"><div className="card-title">Посещаемость · динамика</div><span className="dim" style={{ fontSize: 12 }}>12 недель</span></div>
+        <div className="card-body"><Line data={attendanceTrend} color="var(--accent)" min={80} max={100} /><div className="muted" style={{ fontSize: 12, marginTop: 8 }}>Средняя 91% · −2% за неделю</div></div>
+      </div>
+      <div className="card">
+        <div className="card-head"><div className="card-title">Распределение оценок</div></div>
+        <div className="card-body chart-flex"><Donut segments={gradeSegs} centerTop={total} centerSub="оценок" /><Legend segments={gradeSegs} withValues /></div>
+      </div>
+      <div className="card">
+        <div className="card-head"><div className="card-title">Студенты по группам</div></div>
+        <div className="card-body"><Bars data={byGroup} color="var(--ai)" /></div>
+      </div>
+    </div>
+  );
+}
 
 /* ---- recommended next action (the "what should I do next" unit) ---- */
 interface Act { label: string; primary?: boolean; run: () => void; }
@@ -74,6 +106,8 @@ function AdminCenter() {
         <Kpi icon={<Wallet size={14} />} label="Задолженность" value="₽ 248K" delta="−12% за неделю" up />
         <Kpi icon={<FileText size={14} />} label="Заявления" value="3" delta="+1 новое" up />
       </div>
+
+      <Charts />
 
       <div className="grid dash-cols">
         <div className="grid" style={{ gap: 18 }}>

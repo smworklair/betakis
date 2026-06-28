@@ -1,6 +1,7 @@
 import { Sparkles, GraduationCap } from 'lucide-react';
 import { PageHead, Chip } from '../ui';
-import { groups, gradesFor } from '../data';
+import { groups, gradesFor, finance } from '../data';
+import { Donut, Line, Legend, type Segment } from '../charts';
 
 export function Analytics() {
   const byGroup = groups.map((g) => {
@@ -25,6 +26,38 @@ export function Analytics() {
         <div className="kpi"><div className="kpi-label">Посещаемость</div><div className="kpi-value">91%</div></div>
         <div className="kpi"><div className="kpi-label">Выпуск 2024</div><div className="kpi-value">46</div></div>
       </div>
+
+      {(() => {
+        const dist: Record<number, number> = { 2: 0, 3: 0, 4: 0, 5: 0 };
+        groups.forEach((g) => Object.values(gradesFor(g.name)).forEach((row) => row.forEach((v) => { if (v >= 2 && v <= 5) dist[v]++; })));
+        const gradeSegs: Segment[] = [
+          { label: 'Отлично (5)', value: dist[5], color: 'var(--success)' },
+          { label: 'Хорошо (4)', value: dist[4], color: 'var(--accent)' },
+          { label: 'Удовл. (3)', value: dist[3], color: 'var(--warn)' },
+          { label: 'Неуд. (2)', value: dist[2], color: 'var(--danger)' },
+        ];
+        const paid = finance.payments.filter((p) => p.status === 'Оплачено').reduce((a, p) => a + p.sum, 0);
+        const finSegs: Segment[] = [
+          { label: 'Поступило', value: paid, color: 'var(--success)' },
+          { label: 'Задолженность', value: 248000, color: 'var(--danger)' },
+        ];
+        return (
+          <div className="grid cols-3" style={{ marginBottom: 16 }}>
+            <div className="card">
+              <div className="card-head"><div className="card-title">Распределение оценок</div></div>
+              <div className="card-body chart-flex"><Donut segments={gradeSegs} centerTop={gradeSegs.reduce((a, s) => a + s.value, 0)} centerSub="оценок" /><Legend segments={gradeSegs} withValues /></div>
+            </div>
+            <div className="card">
+              <div className="card-head"><div className="card-title">Посещаемость · динамика</div></div>
+              <div className="card-body"><Line data={[88, 90, 91, 89, 92, 90, 91, 93, 92, 90, 89, 91]} min={80} max={100} /></div>
+            </div>
+            <div className="card">
+              <div className="card-head"><div className="card-title">Финансы</div></div>
+              <div className="card-body chart-flex"><Donut segments={finSegs} centerTop="₽" centerSub="период" /><Legend segments={finSegs} /></div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="card">
         <div className="card-head"><div className="card-title">Средний балл по группам</div></div>
