@@ -113,6 +113,7 @@ export function Scholarship() {
       <div className="ai-card" style={{ marginBottom: 16 }}>
         <div className="ai-head"><Sparkles size={14} /> Подбор кандидатов</div>
         <div className="ai-body">Право на стипендию рассчитано по успеваемости и подтверждающим документам — с указанием основания в каждой строке.</div>
+        <div className="ai-actions"><NexAsk q="Кто претендует на повышенную стипендию и почему?" label="Разобрать кандидатов" subtle={false} /></div>
       </div>
       <div className="card">
         <div className="table-wrap">

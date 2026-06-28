@@ -6,6 +6,8 @@ import type { NexReply } from './nexbrain';
 export type Theme = 'light' | 'dark';
 export interface User { name: string; role: Role; }
 export interface ChatMsg extends Partial<NexReply> { who: 'u' | 'n'; text: string; }
+/** An in-page inline chat anchored to where the user clicked. */
+export interface InlineReq { x: number; y: number; seed: string; explain?: boolean; title?: string; }
 
 interface AppCtx {
   theme: Theme;
@@ -33,6 +35,10 @@ interface AppCtx {
   /** Transient: slide-over nav open (mobile, or when sidebar disabled). */
   navOpen: boolean;
   setNavOpen: (v: boolean) => void;
+  /** In-page inline chat — NEX works right inside the page, at the click. */
+  inline: InlineReq | null;
+  openInline: (r: InlineReq) => void;
+  closeInline: () => void;
   /** Full conversational NEX — an alternative way to drive the whole platform. */
   chatLog: ChatMsg[];
   setChatLog: (fn: (prev: ChatMsg[]) => ChatMsg[]) => void;
@@ -60,6 +66,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [aiSeed, setAiSeed] = useState<string | null>(null);
   const [sidebarEnabled, setSidebarEnabledState] = useState<boolean>(() => localStorage.getItem('nex-sidebar') !== 'off');
   const [navOpen, setNavOpen] = useState(false);
+  const [inline, setInline] = useState<InlineReq | null>(null);
   const [chatLog, setChatLog] = useState<ChatMsg[]>([]);
   const [pendingAsk, setPendingAsk] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -76,6 +83,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const openChat = (q?: string) => { if (q) setPendingAsk(q); setAiOpen(false); setNavOpen(false); setPage('chat'); };
   const clearPendingAsk = () => setPendingAsk(null);
   const setSidebarEnabled = (v: boolean) => { setSidebarEnabledState(v); localStorage.setItem('nex-sidebar', v ? 'on' : 'off'); };
+  const openInline = (r: InlineReq) => { setAiOpen(false); setInline(r); };
+  const closeInline = () => setInline(null);
 
   const toast = (msg: string) => {
     setToastMsg(msg);
@@ -83,7 +92,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, aiOpen, aiSeed, openAi, closeAi, sidebarEnabled, setSidebarEnabled, navOpen, setNavOpen, chatLog, setChatLog, openChat, pendingAsk, clearPendingAsk, toast }}>
+    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, aiOpen, aiSeed, openAi, closeAi, sidebarEnabled, setSidebarEnabled, navOpen, setNavOpen, inline, openInline, closeInline, chatLog, setChatLog, openChat, pendingAsk, clearPendingAsk, toast }}>
       {children}
       {toastMsg && <div className="toast fade"><Sparkles size={15} style={{ color: 'var(--ai)' }} />{toastMsg}</div>}
     </Ctx.Provider>
@@ -107,9 +116,14 @@ export function Chip({ tone, children }: { tone: string; children: ReactNode }) 
     charts, reports. Hands the context off to the full conversational NEX.
     AI is present everywhere as an option, never in the way. */
 export function NexAsk({ q, label = 'Спросить NEX', subtle = true }: { q: string; label?: string; subtle?: boolean }) {
-  const { openChat } = useApp();
+  const { openInline } = useApp();
   return (
-    <button className={`nex-ask-chip ${subtle ? 'subtle' : ''}`} onClick={(e) => { e.stopPropagation(); openChat(q); }} title="Открыть в чате NEX">
+    <button className={`nex-ask-chip ${subtle ? 'subtle' : ''}`} title="NEX ответит прямо здесь"
+      onClick={(e) => {
+        e.stopPropagation();
+        const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        openInline({ x: r.left, y: r.bottom + 6, seed: q, title: label });
+      }}>
       <Sparkles size={12} /> {label}
     </button>
   );

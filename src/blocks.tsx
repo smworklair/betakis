@@ -1,5 +1,5 @@
 import { Sparkles, AlertTriangle, X, FileText, Clock } from 'lucide-react';
-import { useApp, Chip } from './ui';
+import { useApp, Chip, NexAsk } from './ui';
 import { students, finance, gradesFor } from './data';
 
 export const attendanceRate = (id: number) => 100 - ((id * 13) % 35);
@@ -67,6 +67,7 @@ export function ContextDrawer() {
               {debt ? 'Есть незакрытая задолженность по оплате.' : 'Задолженностей по оплате нет.'}{' '}
               {rate < 78 ? 'Рекомендуется связаться с куратором.' : 'Успеваемость стабильная.'}
             </div>
+            <div className="ai-actions"><NexAsk q={`Разбери студента ${s.lastname} ${s.firstname} (${s.group}): риски, причины, что предпринять`} label="Разобрать с NEX" subtle={false} /></div>
           </div>
 
           <div className="obj-stats">

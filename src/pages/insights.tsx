@@ -86,6 +86,7 @@ export function Graduation() {
       <div className="ai-card" style={{ marginBottom: 16 }}>
         <div className="ai-head"><GraduationCap size={14} /> Готовность документов</div>
         <div className="ai-body">У 5 студентов не хватает закрытых задолженностей для допуска. Список сформирован автоматически.</div>
+        <div className="ai-actions"><NexAsk q="Кто не готов к выпуску и что нужно закрыть для допуска?" label="Что мешает выпуску" subtle={false} /></div>
       </div>
       <div className="grid cols-2">
         {readiness.map((r) => (
