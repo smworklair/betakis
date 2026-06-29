@@ -97,6 +97,7 @@ html = r'''<!DOCTYPE html>
   footer{margin:30px 56px 0;padding-top:15px;border-top:1px solid var(--line);text-align:center;font-size:10px;color:var(--faint);letter-spacing:.5px}
 
   .item,.label,.row{break-inside:avoid}
+  .side section{break-inside:avoid}
   @media print{
     body{background:#fff}
     .page{margin:0;max-width:100%;border-radius:0}
