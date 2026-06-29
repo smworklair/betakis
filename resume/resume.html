@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мирзоев Шохрух Анварович — Резюме</title>
+<style>
+  :root{
+    --accent:#2563eb;
+    --accent-soft:#eff4ff;
+    --ink:#1a1f2b;
+    --muted:#5b6472;
+    --line:#e3e7ee;
+    --bg:#f4f6fa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.5;
+    font-size:14px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{
+    max-width:820px;
+    margin:24px auto;
+    background:#fff;
+    box-shadow:0 8px 40px rgba(20,30,60,.08);
+    border-radius:14px;
+    overflow:hidden;
+  }
+  /* Header */
+  header{
+    padding:34px 44px 28px;
+    border-bottom:3px solid var(--accent);
+  }
+  header h1{
+    font-size:30px;
+    font-weight:700;
+    letter-spacing:-.3px;
+  }
+  header .role{
+    color:var(--accent);
+    font-weight:600;
+    font-size:16px;
+    margin-top:4px;
+  }
+  .contacts{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 22px;
+    margin-top:16px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .contacts a{color:var(--muted);text-decoration:none;border-bottom:1px dotted #c3c9d4}
+  .contacts a:hover{color:var(--accent)}
+  .contacts span{display:inline-flex;align-items:center;gap:6px}
+  .contacts .ic{color:var(--accent);font-weight:700}
+
+  /* Body grid */
+  .body{
+    display:grid;
+    grid-template-columns:1fr 280px;
+    gap:0;
+  }
+  .main{padding:26px 44px 34px}
+  .side{
+    padding:26px 30px 34px;
+    background:#fafbfd;
+    border-left:1px solid var(--line);
+  }
+
+  section{margin-bottom:24px}
+  section:last-child{margin-bottom:0}
+  h2{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:1.2px;
+    color:var(--accent);
+    font-weight:700;
+    margin-bottom:12px;
+    padding-bottom:6px;
+    border-bottom:1px solid var(--line);
+  }
+  .side h2{color:var(--ink)}
+
+  p.lead{color:var(--muted)}
+
+  /* Experience / project items */
+  .item{margin-bottom:16px}
+  .item:last-child{margin-bottom:0}
+  .item .top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .item .title{font-weight:600;font-size:14.5px}
+  .item .org{color:var(--accent);font-weight:500;font-size:13.5px}
+  .item .meta{color:var(--muted);font-size:12.5px;white-space:nowrap}
+  .item p{color:var(--muted);margin-top:3px;font-size:13.5px}
+  .item ul{margin:6px 0 0 18px;color:var(--muted);font-size:13.5px}
+  .item ul li{margin-bottom:2px}
+  .item a{color:var(--accent);text-decoration:none;font-size:12.5px}
+  .item a:hover{text-decoration:underline}
+  .links{margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 14px}
+
+  /* Skills (sidebar) */
+  .skill-group{margin-bottom:16px}
+  .skill-group:last-child{margin-bottom:0}
+  .skill-group h3{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--muted);
+    margin-bottom:8px;
+    font-weight:700;
+  }
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{
+    background:var(--accent-soft);
+    color:var(--accent);
+    border-radius:6px;
+    padding:3px 9px;
+    font-size:12px;
+    font-weight:500;
+    white-space:nowrap;
+  }
+  .tag.strong{background:var(--accent);color:#fff}
+  .side ul.plain{list-style:none;font-size:13px;color:var(--muted)}
+  .side ul.plain li{margin-bottom:5px;padding-left:14px;position:relative}
+  .side ul.plain li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+  .lang-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+  .lang-row .lvl{color:var(--muted)}
+
+  footer{
+    text-align:center;
+    padding:14px;
+    font-size:11px;
+    color:#9aa3b2;
+    border-top:1px solid var(--line);
+  }
+
+  @media print{
+    body{background:#fff;font-size:12.5px}
+    .page{box-shadow:none;margin:0;max-width:100%;border-radius:0}
+    @page{margin:12mm}
+  }
+  @media(max-width:720px){
+    .body{grid-template-columns:1fr}
+    .side{border-left:none;border-top:1px solid var(--line)}
+    header,.main{padding-left:24px;padding-right:24px}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Мирзоев Шохрух Анварович</h1>
+    <div class="role">Junior Software Engineer · Backend Developer (AI)</div>
+    <div class="contacts">
+      <span><span class="ic">◉</span> Санкт-Петербург</span>
+      <span><span class="ic">✆</span> +7 (981) 710-24-06</span>
+      <span><span class="ic">✉</span> <a href="mailto:frankengnom@gmail.com">frankengnom@gmail.com</a></span>
+      <span><span class="ic">✉</span> <a href="mailto:smworklair@gmail.com">smworklair@gmail.com</a></span>
+      <span><span class="ic">✈</span> <a href="https://t.me/smworklair">@smworklair</a></span>
+      <span><span class="ic">⌥</span> <a href="https://github.com/smworklair">github.com/smworklair</a></span>
+      <span><span class="ic">★</span> <a href="https://sm-wresume.vercel.app/">Портфолио</a></span>
+    </div>
+  </header>
+
+  <div class="body">
+    <div class="main">
+      <section>
+        <h2>О себе</h2>
+        <p class="lead">Начинающий разработчик с фокусом на backend-разработке, корпоративных информационных системах (KIS/ERP), архитектуре ПО и интеграции искусственного интеллекта. Более 7 лет самостоятельно изучаю программирование и современные технологии, предпочитая практический опыт через собственные проекты. Сейчас основной фокус — разработка корпоративной информационной системы BetaKIS на Go и применение современных AI-технологий.</p>
+      </section>
+
+      <section>
+        <h2>Коммерческий опыт</h2>
+        <div class="item">
+          <div class="top">
+            <span class="title">Freelance Developer</span>
+            <span class="meta">ООО «Рост»</span>
+          </div>
+          <div class="org">Веб-разработка</div>
+          <p>Разработка корпоративного сайта для строительной компании.</p>
+          <ul>
+            <li>Вёрстка и фронтенд: HTML, CSS, JavaScript;</li>
+            <li>Адаптивный интерфейс и публикация проекта.</li>
+          </ul>
+          <div class="links"><a href="https://rost-2.vercel.app/">rost-2.vercel.app ↗</a></div>
+        </div>
+        <div class="item">
+          <div class="top">
+            <span class="title">Преподаватель программирования</span>
+            <span class="meta">Курсы для школьников</span>
+          </div>
+          <p>Проведение занятий по программированию для школьников.</p>
+          <ul>
+            <li>Проведение занятий и объяснение основ программирования;</li>
+            <li>Индивидуальная помощь ученикам.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section>
+        <h2>Проекты</h2>
+        <div class="item">
+          <div class="top">
+            <span class="title">BetaKIS — главный проект</span>
+            <span class="meta">Go · REST API</span>
+          </div>
+          <div class="org">Корпоративная информационная система для образовательных учреждений</div>
+          <p>За два месяца создан масштабный интерактивный прототип системы.</p>
+          <ul>
+            <li>Авторизация и роли пользователей;</li>
+            <li>Корпоративные модули;</li>
+            <li>Backend на Go (в активной разработке) и подготовка REST API;</li>
+            <li>Запланирована интеграция искусственного интеллекта.</li>
+          </ul>
+          <div class="links">
+            <a href="https://beta-one-black.vercel.app/">demo ↗</a>
+            <a href="https://github.com/smworklair/betakis">github ↗</a>
+          </div>
+        </div>
+        <div class="item">
+          <div class="top">
+            <span class="title">AI Assistant</span>
+            <span class="meta">2023 · OpenAI API</span>
+          </div>
+          <p>Экспериментальный AI-бот на базе OpenAI API. Создан в период, когда массовая интеграция LLM только начинала набирать популярность.</p>
+        </div>
+        <div class="item">
+          <div class="top">
+            <span class="title">Dogi</span>
+            <span class="meta">C#</span>
+          </div>
+          <p>Приложение на C#, использующее внешнее API для поиска изображений пород собак.</p>
+          <div class="links"><a href="https://github.com/smworklair/dogi">github ↗</a></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Образование</h2>
+        <div class="item">
+          <div class="top">
+            <span class="title">СПбГУПТД — Институт информационных технологий и автоматизации (ИИТА)</span>
+            <span class="meta">2026 — н.в.</span>
+          </div>
+          <div class="org">Прикладная информатика в экономике</div>
+          <p>Санкт-Петербургский государственный университет промышленных технологий и дизайна.</p>
+        </div>
+        <div class="item">
+          <div class="top">
+            <span class="title">Программист: курс по алгоритмам и структурам данных</span>
+            <span class="meta">доп. образование</span>
+          </div>
+          <p>Дополнительное образование со 2 курса.</p>
+        </div>
+      </section>
+    </div>
+
+    <aside class="side">
+      <section>
+        <h2>Языки программирования</h2>
+        <div class="tags">
+          <span class="tag strong">Python</span>
+          <span class="tag strong">Go</span>
+          <span class="tag">C#</span>
+          <span class="tag">SQL</span>
+          <span class="tag">Java</span>
+          <span class="tag">JavaScript</span>
+          <span class="tag">PHP</span>
+          <span class="tag">HTML</span>
+          <span class="tag">CSS</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>Backend</h2>
+        <ul class="plain">
+          <li>REST API · HTTP · JSON</li>
+          <li>Проектирование баз данных</li>
+          <li>Архитектура приложений</li>
+          <li>Интеграция LLM</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Базы данных и инструменты</h2>
+        <div class="tags">
+          <span class="tag">MySQL</span>
+          <span class="tag">Git</span>
+          <span class="tag">GitHub</span>
+          <span class="tag">Docker</span>
+          <span class="tag">Linux</span>
+          <span class="tag">Bash</span>
+          <span class="tag">Postman</span>
+          <span class="tag">Visual Studio</span>
+          <span class="tag">JetBrains</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>AI / LLM</h2>
+        <p class="lead" style="font-size:12.5px;margin-bottom:8px">Использую AI как инструмент разработки, исследования и интеграции в проекты.</p>
+        <div class="tags">
+          <span class="tag">OpenAI</span>
+          <span class="tag">Claude</span>
+          <span class="tag">Gemini</span>
+          <span class="tag">DeepSeek</span>
+          <span class="tag">Qwen</span>
+          <span class="tag">Grok</span>
+          <span class="tag">Mistral</span>
+          <span class="tag">Ollama</span>
+          <span class="tag">LM Studio</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>Языки</h2>
+        <div class="lang-row"><span>Русский</span><span class="lvl">свободно</span></div>
+        <div class="lang-row"><span>Английский</span><span class="lvl">тех. документация, B1</span></div>
+      </section>
+
+      <section>
+        <h2>Дополнительно</h2>
+        <ul class="plain">
+          <li>Программирую более 7 лет</li>
+          <li>Самостоятельно изучаю новые технологии</li>
+          <li>Готов к удалённой работе и переезду</li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+
+  <footer>Резюме · обновлено 06.2026</footer>
+</div>
+</body>
+</html>
