@@ -52,7 +52,8 @@ html = r'''<!DOCTYPE html>
   .c-tg{--cl:var(--tg);--bg:#e9f6fc;--bd:#cfeaf7}
   .c-gh{--cl:var(--gh);--bg:#f1f1f2;--bd:#e2e3e5}
   .c-mail{--cl:var(--mail);--bg:#fdeceb;--bd:#f8d3d0}
-  .c-folio{--cl:var(--folio);--bg:#f2ecfd;--bd:#e2d4fb}
+  .c-folio{--cl:#8a6400;--bg:#fff6db;--bd:#f3df9e}
+  .c-folio svg{fill:none}
   .c-geo{--cl:var(--geo);--bg:#fcecea;--bd:#f6d6d0}
   .c-phone{--cl:var(--phone);--bg:#e9f8f0;--bd:#cdedda}
 
@@ -132,7 +133,7 @@ html = r'''<!DOCTYPE html>
         <a class="c c-mail" href="mailto:smworklair@gmail.com"><svg viewBox="0 0 24 24"><path d="M3 5h18c.6 0 1 .4 1 1v12c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1V6c0-.6.4-1 1-1zm9 7L4 6.8V18h16V6.8L12 12z"/></svg>smworklair@gmail.com</a>
         <a class="c c-tg" href="https://t.me/smworklair"><svg viewBox="0 0 24 24"><path d="M23.1 3.8l-3.5 16.4c-.3 1.2-1 1.5-2 .9l-5.5-4-2.6 2.6c-.3.3-.6.5-1.1.5l.4-5.5L18.6 6c.4-.4-.1-.6-.7-.2L7.5 12.6 2.1 11c-1.2-.4-1.2-1.2.3-1.8L21.6 2.3c1-.4 1.8.2 1.5 1.5z"/></svg>@smworklair</a>
         <a class="c c-gh" href="https://github.com/smworklair"><svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12c0 4.4 2.9 8.2 6.8 9.5.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.4-2.2-.3-4.5-1.1-4.5-4.9 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.6 0 0 .8-.3 2.7 1 .8-.2 1.6-.3 2.5-.3.8 0 1.7.1 2.5.3 1.9-1.3 2.7-1 2.7-1 .5 1.3.2 2.3.1 2.6.6.7 1 1.6 1 2.7 0 3.8-2.3 4.6-4.5 4.9.4.3.7.9.7 1.8v2.7c0 .3.2.6.7.5C19.1 20.2 22 16.4 22 12c0-5.5-4.5-10-10-10z"/></svg>github.com/smworklair</a>
-        <a class="c c-folio" href="https://sm-wresume.vercel.app/"><svg viewBox="0 0 24 24"><path d="M12 3l10 17H2L12 3z"/></svg>Портфолио</a>
+        <a class="c c-folio" href="https://sm-wresume.vercel.app/"><svg viewBox="0 0 24 24"><rect x="9.2" y="0.6" width="5.6" height="3.7" fill="#1a1a1a"/><rect x="6.6" y="4" width="10.8" height="1.2" rx="0.5" fill="#1a1a1a"/><path d="M12 5.2 21.2 20.4 2.8 20.4Z" fill="#FFC83D" stroke="#1a1a1a" stroke-width="1.1" stroke-linejoin="round"/><ellipse cx="12" cy="12.8" rx="3.1" ry="2.3" fill="#fff" stroke="#1a1a1a" stroke-width="1"/><circle cx="12" cy="12.8" r="1.05" fill="#1a1a1a"/><path d="M12 17.8 10 16.7 10 19Z M12 17.8 14 16.7 14 19Z" fill="#1a1a1a"/></svg>Портфолио</a>
       </div>
     </div>
   </header>
