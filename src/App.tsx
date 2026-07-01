@@ -12,7 +12,8 @@ import { ContextDrawer } from './blocks';
 import { AiLayer, ProactiveStrip } from './ai';
 
 import Chat from './pages/Chat';
-import { Messenger, NotificationsPage, Documents, Feed, Campus } from './pages/beta';
+import { Messenger, NotificationsPage, Documents, Feed } from './pages/beta';
+import Campus from './pages/campus';
 import CommandCenter from './pages/CommandCenter';
 import { SecurityConsole } from './pages/Dashboard';
 import { Students, Groups, Staff } from './pages/people';
