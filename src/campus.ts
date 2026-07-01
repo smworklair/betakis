@@ -44,6 +44,24 @@ export const OPPORTUNITIES: Opportunity[] = [
   { id: 9, kind: 'vacancy', title: 'Лаборант кафедры ИТ', org: 'Колледж', desc: 'Part-time на кампусе', tags: ['Наука', 'Backend'], deadlineDays: 6 },
 ];
 
+/* ==== GET /campus/perks — студенческие подписки и льготы ==== */
+export interface Perk {
+  id: number;
+  service: string;
+  what: string;
+  status: 'active' | 'available';
+  tags: Interest[];
+}
+export const PERKS: Perk[] = [
+  { id: 1, service: 'GitHub Student Pack', what: 'Copilot, приватные репо и 100+ инструментов бесплатно', status: 'active', tags: ['Backend', 'Frontend'] },
+  { id: 2, service: 'Яндекс Облако', what: 'Грант на облако для учебных проектов', status: 'available', tags: ['Backend', 'AI'] },
+  { id: 3, service: 'Яндекс Плюс', what: 'Музыка и Кинопоиск по студенческому тарифу', status: 'active', tags: [] },
+  { id: 4, service: 'JetBrains', what: 'Все IDE бесплатно по студенческой лицензии', status: 'active', tags: ['Backend', 'Java', 'Python'] },
+  { id: 5, service: 'VK Музыка', what: 'Скидка 50% по студенческому', status: 'available', tags: [] },
+  { id: 6, service: 'Figma Education', what: 'Профессиональный план бесплатно', status: 'available', tags: ['Frontend'] },
+  { id: 7, service: 'Notion Education', what: 'Личный Pro-план бесплатно', status: 'available', tags: [] },
+];
+
 /* ==== GET /campus/lectures ==== */
 export interface Lecture { id: number; title: string; subject: string; by: string; dur: string; progress: number; tags: Interest[]; }
 export const LECTURES: Lecture[] = [
