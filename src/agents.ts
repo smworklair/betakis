@@ -67,3 +67,45 @@ export const AGENT_LOG: AgentLogEntry[] = [
 ];
 
 export const agentById = (id: string) => AGENTS.find((a) => a.id === id)!;
+
+/* ==== Автопилот: пресет выставляет уровень всем агентам разом ==== */
+export const AUTOPILOT_PRESETS = [
+  { id: 'careful', name: 'Осторожный', desc: 'все агенты только советуют', level: 1 as Autonomy },
+  { id: 'standard', name: 'Стандартный', desc: 'готовят действия, вы подтверждаете', level: 2 as Autonomy },
+  { id: 'bold', name: 'Смелый', desc: 'рутина автономно, риск — на подтверждение', level: 3 as Autonomy },
+] as const;
+
+/* ==== GET /agents/rules — автоматизации, описанные словами.
+   BACKEND: текст правила парсит LLM → триггер + действие в БД. ==== */
+export interface Rule { id: number; text: string; agentId: string; enabled: boolean; }
+export const RULES: Rule[] = [
+  { id: 1, text: 'Если посещаемость студента ниже 70% две недели — уведомить куратора', agentId: 'risk', enabled: true },
+  { id: 2, text: 'Если 5+ неудачных входов с одного IP за час — готовить блокировку', agentId: 'guard', enabled: true },
+  { id: 3, text: 'За 3 дня до срока оплаты — напомнить студенту и родителю', agentId: 'fin', enabled: true },
+  { id: 4, text: 'Новая стажировка по подпискам студента — сразу в его ленту', agentId: 'scout', enabled: true },
+  { id: 5, text: 'Появилось окно в расписании — предложить перенос ближайшей пары', agentId: 'sched', enabled: false },
+];
+
+/** Подбор агента под новое правило по ключевым словам.
+    BACKEND: классификация LLM. */
+export function guessAgent(ruleText: string): string {
+  const t = ruleText.toLowerCase();
+  if (/вход|ip|сесси|парол/.test(t)) return 'guard';
+  if (/оплат|долг|плат|деньг/.test(t)) return 'fin';
+  if (/расписан|пар|аудитор|окно/.test(t)) return 'sched';
+  if (/заявлен|абитур|приём|прием/.test(t)) return 'adm';
+  if (/приказ|справк|документ/.test(t)) return 'docs';
+  if (/стажировк|грант|кампус|подписк/.test(t)) return 'scout';
+  return 'risk';
+}
+
+/** Прогноз последствий действия ДО подтверждения (dry-run).
+    BACKEND: симуляция на копии данных / предсказание модели. */
+export function dryRun(action: string): string[] {
+  const t = action.toLowerCase();
+  if (/блокир|ip/.test(t)) return ['IP попадёт в чёрный список на 72 часа', 'Активных сессий с этого IP нет — никого не отключит', 'При ложном срабатывании разблокировка в 1 клик'];
+  if (/уведомлени|должник|разосл/.test(t)) return ['8 студентов получат письмо и push', 'Тон — напоминание, не требование', 'Ожидаемый эффект: ~5 оплат до срока (по прошлым рассылкам)'];
+  if (/приказ|подпис/.test(t)) return ['2 приказа уйдут на подпись директору', 'Студенты НЕ будут уведомлены до подписания', 'Отзыв возможен до подписи'];
+  if (/куратор|встреч/.test(t)) return ['4 кураторам придут задачи со сроком 3 дня', 'В задачу вложена сводка по каждому студенту'];
+  return ['Действие обратимо', 'Затронутые записи будут помечены в аудите'];
+}

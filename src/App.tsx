@@ -252,6 +252,31 @@ function NexOmni() {
   );
 }
 
+/* ===================== Live agent pulse (topbar) ===================== */
+const PULSE_LINES = [
+  'Страж: слежу за входами…',
+  'Куратор-риск: пересчитываю прогнозы…',
+  'Кампус-скаут: ищу новые стажировки…',
+  'Финконтролёр: сверяю платежи…',
+  'Диспетчер: конфликтов в расписании нет',
+];
+
+function AgentPulse() {
+  const { user, setPage } = useApp();
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setI((x) => (x + 1) % PULSE_LINES.length), 4000);
+    return () => clearInterval(t);
+  }, []);
+  if (user?.role !== 'admin') return null;
+  return (
+    <button className="agent-pulse" title="Агенты NEX работают — открыть центр агентов" onClick={() => setPage('agents')}>
+      <span className="pulse-dot-live" />
+      <span className="agent-pulse-text">{PULSE_LINES[i]}</span>
+    </button>
+  );
+}
+
 /* ===================== Shell ===================== */
 function Shell() {
   const { user, page, setPage, sidebarEnabled, navOpen, setNavOpen } = useApp();
@@ -303,6 +328,7 @@ function Shell() {
           <button className="icon-btn nav-toggle" onClick={() => setNavOpen(true)} aria-label="Меню"><Menu size={18} /></button>
           <strong className="topbar-title" style={{ fontSize: 14, fontWeight: 600 }}>{title}</strong>
           <NexOmni />
+          <AgentPulse />
           <button className="icon-btn topbar-bell" onClick={() => nav('notifications')} aria-label="Уведомления"><Bell size={18} /><span className="dot-alert" /></button>
           <div className="avatar" title={`${user.name} · ${roleLabel[user.role]}`}>{(user.name[0] || 'U').toUpperCase()}</div>
         </header>
