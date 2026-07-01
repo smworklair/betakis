@@ -770,6 +770,35 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; }
 .role-btn.frozen { opacity: .5; cursor: not-allowed; position: relative; }
 .frozen-badge { position: absolute; top: 8px; right: 8px; color: var(--accent); }
 
+/* автопилот — пресеты политики */
+.pilot-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.pilot-btn { display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; border: 1px solid var(--border-2); border-radius: var(--r-md); background: var(--surface); cursor: pointer; text-align: left; }
+.pilot-btn b { font-size: 13.5px; color: var(--text); }
+.pilot-btn span { font-size: 11.5px; color: var(--text-3); line-height: 1.35; }
+.pilot-btn:hover { border-color: var(--ai); }
+.pilot-btn.on { border-color: var(--ai); background: var(--ai-weak); }
+.pilot-btn.on b { color: var(--ai); }
+@media (max-width: 720px) { .pilot-row { grid-template-columns: 1fr; } }
+
+/* тумблер правила */
+.rule-toggle { width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--border-2); background: var(--surface-2); position: relative; cursor: pointer; flex-shrink: 0; transition: background .15s; }
+.rule-toggle i { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 999px; background: var(--text-3); transition: transform .15s, background .15s; }
+.rule-toggle.on { background: var(--ai); border-color: var(--ai); }
+.rule-toggle.on i { transform: translateX(16px); background: #fff; }
+
+/* прогноз последствий (dry-run) */
+.dryrun { margin-top: 9px; border: 1px dashed color-mix(in srgb, var(--ai) 40%, var(--border-2)); border-radius: var(--r-md); padding: 9px 11px; display: flex; flex-direction: column; gap: 6px; background: var(--ai-weak); }
+.dryrun-row { display: flex; align-items: flex-start; gap: 7px; font-size: 12.5px; color: var(--text-2); }
+.dryrun-row svg { color: var(--ai); flex-shrink: 0; margin-top: 2px; }
+
+/* живой пульс агентов в шапке */
+.agent-pulse { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; max-width: 240px; }
+.agent-pulse:hover { border-color: var(--ai); }
+.pulse-dot-live { width: 7px; height: 7px; border-radius: 999px; background: var(--ai); flex-shrink: 0; animation: ping 1.8s ease-out infinite; }
+@keyframes ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ai) 50%, transparent); } 70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.agent-pulse-text { font-size: 11.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1100px) { .agent-pulse { display: none; } }
+
 /* ============================================================
    Mobile shell — X / Twitter-style: drawer + bottom tabs + FAB
    ============================================================ */

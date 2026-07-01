@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react';
 import {
   Sparkles, Bot, Check, X, ArrowUp, Pause, Play, ShieldAlert, ScrollText, Send,
+  Gauge, ListChecks, Eye, Plus,
 } from 'lucide-react';
 import { PageHead, Chip, Beta, useApp } from '../ui';
 import { planFor } from '../nexbrain';
 import {
-  AGENTS, QUEUE, AGENT_LOG, AUTONOMY_LEVELS, agentById,
-  type Agent, type Autonomy, type PendingAction,
+  AGENTS, QUEUE, AGENT_LOG, AUTONOMY_LEVELS, AUTOPILOT_PRESETS, RULES, agentById, guessAgent, dryRun,
+  type Agent, type Autonomy, type PendingAction, type Rule,
 } from '../agents';
 
 /* ============================================================
    АГЕНТЫ — экспериментальный центр агентности NEX (только админ).
-   Человек управляет не кнопками, а ПОЛИТИКОЙ: выставляет уровень
-   автономии; агенты работают фоном; спорное — в очередь;
-   сделанное — в журнал. Задачу можно поручить словами.
+   Человек управляет ПОЛИТИКОЙ, а не кнопками:
+   автопилот → уровни автономии → правила словами → очередь
+   с прогнозом последствий → журнал.
    ============================================================ */
 
 const riskTone = { low: 'chip-success', medium: 'chip-warn', high: 'chip-danger' } as const;
@@ -47,7 +48,7 @@ function StepsRun({ label, onDone }: { label: string; onDone: () => void }) {
 function Delegate() {
   const { toast } = useApp();
   const [text, setText] = useState('');
-  const [plan, setPlan] = useState<string | null>(null);   // задача, на которую составлен план
+  const [plan, setPlan] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
 
   const propose = () => { if (text.trim()) { setPlan(text.trim()); setRunning(false); } };
@@ -84,11 +85,12 @@ function Delegate() {
   );
 }
 
-/* ---- очередь подтверждений: агенты подготовили, человек решает ---- */
+/* ---- очередь подтверждений: с прогнозом последствий до решения ---- */
 function Queue() {
   const { toast } = useApp();
   const [items, setItems] = useState<PendingAction[]>(QUEUE);
   const [runningId, setRunningId] = useState<number | null>(null);
+  const [previewId, setPreviewId] = useState<number | null>(null);
 
   const decline = (id: number) => { setItems((xs) => xs.filter((x) => x.id !== id)); toast('Отклонено — агент учтёт'); };
   const finish = (id: number) => { setItems((xs) => xs.filter((x) => x.id !== id)); setRunningId(null); };
@@ -107,11 +109,18 @@ function Queue() {
             <div className="feed-main">
               <div className="t"><b>{agentById(q.agentId).name}</b> — {q.action}</div>
               <div className="m">{q.why}</div>
+              {/* прогноз последствий (dry-run) — смотришь, ЧТО изменится, до решения */}
+              {previewId === q.id && (
+                <div className="dryrun">
+                  {dryRun(q.action).map((e, i) => <div key={i} className="dryrun-row"><Eye size={12} />{e}</div>)}
+                </div>
+              )}
               {runningId === q.id && <StepsRun label={q.action} onDone={() => finish(q.id)} />}
             </div>
             {runningId !== q.id && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
                 <Chip tone={riskTone[q.risk]}>{riskLabel[q.risk]}</Chip>
+                <button className="btn btn-sm btn-outline" onClick={() => setPreviewId(previewId === q.id ? null : q.id)}><Eye size={13} />Прогноз</button>
                 <button className="btn btn-sm btn-primary" onClick={() => setRunningId(q.id)}>Подтвердить</button>
                 <button className="btn btn-sm btn-ghost" onClick={() => decline(q.id)}>Отклонить</button>
               </div>
@@ -123,10 +132,51 @@ function Queue() {
   );
 }
 
-/* ---- карточка агента: пауза + уровень автономии (политика, а не кнопки) ---- */
-function AgentCard({ a }: { a: Agent }) {
+/* ---- правила: автоматизации, описанные обычным языком ---- */
+function Rules() {
   const { toast } = useApp();
-  const [autonomy, setAutonomy] = useState<Autonomy>(a.autonomy);
+  const [rules, setRules] = useState<Rule[]>(RULES);
+  const [text, setText] = useState('');
+
+  const toggle = (id: number) => setRules((rs) => rs.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)));
+  const add = () => {
+    const t = text.trim();
+    if (!t) return;
+    // BACKEND: текст правила разбирает LLM в триггер+действие; здесь только подбор агента
+    setRules((rs) => [{ id: Date.now(), text: t, agentId: guessAgent(t), enabled: true }, ...rs]);
+    setText('');
+    toast('Правило создано — назначен агент ' + agentById(guessAgent(t)).name);
+  };
+
+  return (
+    <div className="card" style={{ marginBottom: 16 }}>
+      <div className="card-head"><div className="card-title"><ListChecks size={15} /> Правила</div><span className="dim" style={{ fontSize: 12 }}>автоматизации обычным языком</span></div>
+      <div className="card-body" style={{ paddingBottom: 6 }}>
+        <form className="chat-input" onSubmit={(e) => { e.preventDefault(); add(); }} style={{ height: 42 }}>
+          <Plus size={15} className="lead" />
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Опишите правило: «если …, то …» — NEX сам назначит агента" />
+          <button className="ask-send sm" type="submit" aria-label="Добавить правило"><ArrowUp size={15} /></button>
+        </form>
+      </div>
+      <div className="row-list">
+        {rules.map((r) => (
+          <div className="feed-row" key={r.id} style={{ alignItems: 'center', opacity: r.enabled ? 1 : 0.55 }}>
+            <div className="feed-ico ai"><Bot size={13} /></div>
+            <div className="feed-main">
+              <div className="t">{r.text}</div>
+              <div className="m">агент: {agentById(r.agentId).name}</div>
+            </div>
+            <button className={`rule-toggle ${r.enabled ? 'on' : ''}`} onClick={() => toggle(r.id)} aria-label="Переключить правило"><i /></button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---- карточка агента: пауза + уровень автономии ---- */
+function AgentCard({ a, autonomy, setAutonomy }: { a: Agent; autonomy: Autonomy; setAutonomy: (v: Autonomy) => void }) {
+  const { toast } = useApp();
   const [paused, setPaused] = useState(a.paused);
   return (
     <div className={`agent-card ${paused ? 'paused' : ''}`}>
@@ -159,23 +209,44 @@ function AgentCard({ a }: { a: Agent }) {
 }
 
 export default function Agents() {
+  const { toast } = useApp();
+  /* уровни всех агентов — единое состояние, чтобы автопилот менял всё разом */
+  const [levels, setLevels] = useState<Record<string, Autonomy>>(
+    () => Object.fromEntries(AGENTS.map((a) => [a.id, a.autonomy])),
+  );
+  const setLevel = (id: string, v: Autonomy) => setLevels((m) => ({ ...m, [id]: v }));
+  const applyPreset = (level: Autonomy, name: string) => {
+    setLevels(Object.fromEntries(AGENTS.map((a) => [a.id, level])));
+    toast(`Автопилот «${name}»: уровень применён ко всем агентам`);
+  };
+  const activePreset = AUTOPILOT_PRESETS.find((p) => AGENTS.every((a) => levels[a.id] === p.level))?.id ?? null;
+
   return (
     <div className="fade content-narrow">
       <PageHead title="Агенты" sub="Штат фоновых агентов NEX — вы управляете политикой, а не кнопками" actions={<Beta />} />
 
-      <div className="ai-card" style={{ marginBottom: 16 }}>
-        <div className="ai-head"><Sparkles size={14} /> Как это работает</div>
-        <div className="ai-body">
-          Каждому агенту вы выставляете уровень автономии: <b>Наблюдает → Советует → Готовит → Автономен</b>.
-          Всё, что выше уровня, попадает в очередь на подтверждение; всё сделанное — в журнал аудита.
+      {/* Автопилот: одно движение — политика всей организации */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-head"><div className="card-title"><Gauge size={15} /> Автопилот</div><span className="dim" style={{ fontSize: 12 }}>пресет выставляет уровень всем агентам</span></div>
+        <div className="card-body pilot-row">
+          {AUTOPILOT_PRESETS.map((p) => (
+            <button key={p.id} className={`pilot-btn ${activePreset === p.id ? 'on' : ''}`} onClick={() => applyPreset(p.level, p.name)}>
+              <b>{p.name}</b><span>{p.desc}</span>
+            </button>
+          ))}
         </div>
       </div>
 
       <Delegate />
       <Queue />
+      <Rules />
 
       <div className="agent-grid" style={{ marginBottom: 16 }}>
-        {AGENTS.map((a) => <div key={a.id} style={{ display: 'contents' }}><AgentCard a={a} /></div>)}
+        {AGENTS.map((a) => (
+          <div key={a.id} style={{ display: 'contents' }}>
+            <AgentCard a={a} autonomy={levels[a.id]} setAutonomy={(v) => setLevel(a.id, v)} />
+          </div>
+        ))}
       </div>
 
       <div className="card">
