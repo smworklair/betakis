@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { PageHead, Chip, Beta, NexAsk, useApp } from '../ui';
 import {
-  INTERESTS, OPPORTUNITIES, OPP_KIND_LABEL, LECTURES, CALENDAR, PROGRESS, ACHIEVEMENTS, PORTFOLIO,
+  INTERESTS, OPPORTUNITIES, OPP_KIND_LABEL, LECTURES, CALENDAR, PROGRESS, ACHIEVEMENTS, PORTFOLIO, PERKS,
   matchScore, whyRecommended, urgency, forYou, continueLecture,
   type Interest, type Opportunity, type OppKind,
 } from '../campus';
@@ -87,7 +87,31 @@ function ForYou({ interests, setInterests }: { interests: Interest[]; setInteres
       <div className="opp-grid">
         {feed.slice(0, 6).map((o) => <div key={o.id} style={{ display: 'contents' }}><OppCard opp={o} interests={interests} /></div>)}
       </div>
+
+      {/* Студенческие подписки — сервисы, положенные по статусу студента */}
+      <div className="card" style={{ marginTop: 14 }}>
+        <div className="card-head"><div className="card-title"><Star size={15} /> Студенческие подписки</div><span className="dim" style={{ fontSize: 12 }}>бесплатно или со скидкой по статусу студента</span></div>
+        <div className="card-body perk-grid">
+          {PERKS.map((p) => <div key={p.id} style={{ display: 'contents' }}><PerkCard service={p.service} what={p.what} status={p.status} /></div>)}
+        </div>
+      </div>
     </>
+  );
+}
+
+function PerkCard({ service, what, status }: { service: string; what: string; status: 'active' | 'available' }) {
+  const { toast } = useApp();
+  return (
+    <div className="perk-card">
+      <div className="perk-logo">{service[0]}</div>
+      <div className="perk-main">
+        <div className="perk-name">{service}</div>
+        <div className="perk-what">{what}</div>
+      </div>
+      {status === 'active'
+        ? <Chip tone="chip-success">активна</Chip>
+        : <button className="btn btn-sm btn-outline" onClick={() => toast('Активация — бета')}>Активировать</button>}
+    </div>
   );
 }
 

@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, School, ClipboardList, Calendar, BookOpen, CheckSquare,
   Wallet, Award, Briefcase, BarChart3, GraduationCap, ShieldCheck, Settings as SettingsIcon,
   Bell, Sparkles, Lock, User as UserIcon, ArrowRight, Menu, X, LogOut,
-  MessageSquare, FileText, Rss, Compass,
+  MessageSquare, FileText, Rss, Compass, Bot, Snowflake,
   type LucideIcon,
 } from 'lucide-react';
 import { useApp, Beta, useIsMobile, type User } from './ui';
@@ -14,6 +14,7 @@ import { AiLayer, ProactiveStrip } from './ai';
 import Chat from './pages/Chat';
 import { Messenger, NotificationsPage, Documents, Feed } from './pages/beta';
 import Campus from './pages/campus';
+import Agents from './pages/agents';
 import CommandCenter from './pages/CommandCenter';
 import { SecurityConsole } from './pages/Dashboard';
 import { Students, Groups, Staff } from './pages/people';
@@ -45,6 +46,7 @@ const META: Record<string, Meta> = {
   documents: { label: 'Документы', icon: FileText, roles: ['admin'], beta: true },
   feed: { label: 'Лента', icon: Rss, roles: ['admin'], beta: true },
   campus: { label: 'Кампус', icon: Compass, roles: ['admin'], beta: true },
+  agents: { label: 'Агенты', icon: Bot, roles: ['admin'], beta: true },
   settings: { label: 'Настройки', icon: SettingsIcon, roles: ALL },
 };
 
@@ -57,6 +59,7 @@ const NAV: { title: string; items: string[] }[] = [
   { title: 'Аналитика', items: ['analytics', 'graduation'] },
   { title: 'Безопасность', items: ['security'] },
   { title: 'Бета', items: ['messenger', 'notifications', 'documents', 'feed', 'campus'] },
+  { title: 'Эксперимент', items: ['agents'] },
 ];
 
 function renderPage(id: string): ReactNode {
@@ -80,6 +83,7 @@ function renderPage(id: string): ReactNode {
     case 'documents': return <Documents />;
     case 'feed': return <Feed />;
     case 'campus': return <Campus />;
+    case 'agents': return <Agents />;
     case 'settings': return <Settings />;
     default: return <CommandCenter />;
   }
@@ -129,15 +133,24 @@ function Login() {
           <p className="muted" style={{ fontSize: 13.5, marginTop: 4, marginBottom: 20 }}>Выберите роль и войдите. Демо-пароль: <b className="mono">0000</b></p>
 
           <label className="field-label">Тип учётной записи</label>
-          <div className="role-grid" style={{ marginBottom: 18 }}>
+          {/* Эксперимент с агентностью идёт на роли администратора; остальные заморожены */}
+          <div className="role-grid" style={{ marginBottom: 8 }}>
             {ROLE_OPTS.map((o) => {
               const Icon = o.icon;
+              const frozen = o.role !== 'admin';
               return (
-                <button type="button" key={o.role} className={`role-btn ${role === o.role ? 'active' : ''}`} onClick={() => setRole(o.role)}>
-                  <Icon className="ico" size={18} /><b>{roleLabel[o.role]}</b><span>{o.hint}</span>
+                <button type="button" key={o.role} disabled={frozen}
+                  className={`role-btn ${role === o.role ? 'active' : ''} ${frozen ? 'frozen' : ''}`}
+                  onClick={() => !frozen && setRole(o.role)}>
+                  <Icon className="ico" size={18} /><b>{roleLabel[o.role]}</b>
+                  <span>{frozen ? 'Временно заморожена' : o.hint}</span>
+                  {frozen && <span className="frozen-badge"><Snowflake size={11} /></span>}
                 </button>
               );
             })}
+          </div>
+          <div className="muted" style={{ fontSize: 11.5, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Snowflake size={12} style={{ color: 'var(--accent)' }} /> Идёт эксперимент с ИИ-агентностью — доступна только роль администратора.
           </div>
 
           <label className="field-label">Имя</label>
