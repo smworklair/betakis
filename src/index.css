@@ -728,6 +728,23 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; }
 .campus-tile:hover { border-color: var(--ai); transform: translateY(-2px); }
 .campus-ic { width: 42px; height: 42px; border-radius: 12px; background: var(--ai-weak); color: var(--ai); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
+/* ---- Кампус: возможности, подписки, вкладки ---- */
+.campus-tabs { flex-wrap: wrap; }
+.opp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.opp-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 15px 16px; display: flex; flex-direction: column; gap: 6px; transition: border-color .12s; }
+.opp-card:hover { border-color: var(--ai); }
+.opp-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 3px; }
+.opp-title { font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+.opp-org { font-size: 12.5px; color: var(--text-2); font-weight: 600; }
+.opp-desc { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+.opp-why { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ai); font-weight: 600; margin-top: 2px; }
+.opp-actions { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.match-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--ai-weak); color: var(--ai); border: 1px solid color-mix(in srgb, var(--ai) 30%, transparent); }
+.interests { display: flex; flex-wrap: wrap; gap: 7px; }
+.int-chip { padding: 6px 13px; border-radius: 999px; border: 1px solid var(--border-2); background: var(--surface); color: var(--text-2); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.int-chip.on { background: var(--ai); color: #fff; border-color: var(--ai); }
+.chip-btn.on-ai { background: var(--ai); color: #fff; border-color: var(--ai); }
+
 /* ============================================================
    Mobile shell — X / Twitter-style: drawer + bottom tabs + FAB
    ============================================================ */
