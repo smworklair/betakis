@@ -5,6 +5,7 @@ import { useApp, Chip, NexAsk } from './ui';
 import { students, finance } from './data';
 import { nexReply, attendanceRate, avgGrade, pageInsight, PAGE_TITLES } from './nexbrain';
 import { llmReady, geminiAsk } from './llm';
+import { Md } from './md';
 
 /* ---------- Proactive strip: NEX speaks first on every screen ---------- */
 export function ProactiveStrip() {
@@ -131,7 +132,7 @@ function InlinePanel() {
             <div className="inline-msg n" key={i}>
               <div className="ic"><Sparkles size={12} /></div>
               <div className="nb">
-                {m.text}
+                <Md text={m.text} />
                 {m.nav && m.nav.length > 0 && (
                   <div className="inline-nav">{m.nav.map((n) => <button key={n.page + n.label} className="chip-btn" onClick={() => setPage(n.page)}>{n.label} <ArrowRight size={12} className="ic" /></button>)}</div>
                 )}
@@ -235,7 +236,7 @@ function SelExplain() {
           <span className="inline-badge">{llmReady() ? 'gemini' : 'без контекста'}</span>
           <button className="icon-btn" title="Закрыть" onClick={closeExplain}><X size={15} /></button>
         </div>
-        <div className="sel-explain-body">{body}</div>
+        <div className="sel-explain-body"><Md text={body} /></div>
         <button className="sel-explain-more" onClick={() => { openChat(`${explain.text} — объясни подробнее`); closeExplain(); }}>
           Подробнее в чате с данными <ArrowRight size={13} />
         </button>
