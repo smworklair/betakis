@@ -262,13 +262,14 @@ const PULSE_LINES = [
 ];
 
 function AgentPulse() {
-  const { user, setPage } = useApp();
+  const { user, setPage, pulseEnabled } = useApp();
   const [i, setI] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setI((x) => (x + 1) % PULSE_LINES.length), 4000);
     return () => clearInterval(t);
   }, []);
-  if (user?.role !== 'admin') return null;
+  /* по умолчанию выключен — включается в Настройках */
+  if (!pulseEnabled || user?.role !== 'admin') return null;
   return (
     <button className="agent-pulse" title="Агенты NEX работают — открыть центр агентов" onClick={() => setPage('agents')}>
       <span className="pulse-dot-live" />
