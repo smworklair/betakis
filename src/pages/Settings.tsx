@@ -3,7 +3,7 @@ import { PageHead, Chip, Avatar, Soon, useApp } from '../ui';
 import { roleLabel } from '../data';
 
 export default function Settings() {
-  const { theme, setTheme, user, setUser, sidebarEnabled, setSidebarEnabled, openChat, toast } = useApp();
+  const { theme, setTheme, user, setUser, sidebarEnabled, setSidebarEnabled, pulseEnabled, setPulseEnabled, openChat, toast } = useApp();
   return (
     <div className="fade content-narrow" style={{ maxWidth: 760 }}>
       <PageHead title="Настройки" sub="Профиль, оформление и безопасность" />
@@ -47,6 +47,16 @@ export default function Settings() {
           <div className="seg">
             <button className={sidebarEnabled ? 'on' : ''} onClick={() => setSidebarEnabled(true)}>Вкл</button>
             <button className={!sidebarEnabled ? 'on' : ''} onClick={() => setSidebarEnabled(false)}>Выкл</button>
+          </div>
+        </div>
+        <div className="card-body" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, borderTop: '1px solid var(--border)' }}>
+          <div>
+            <div style={{ fontWeight: 600 }}>Пульс агентов в шапке</div>
+            <div className="muted" style={{ fontSize: 13 }}>Строка «кто из агентов что делает сейчас» рядом с поиском. По умолчанию выключена, чтобы не отвлекать.</div>
+          </div>
+          <div className="seg">
+            <button className={pulseEnabled ? 'on' : ''} onClick={() => setPulseEnabled(true)}>Вкл</button>
+            <button className={!pulseEnabled ? 'on' : ''} onClick={() => setPulseEnabled(false)}>Выкл</button>
           </div>
         </div>
         <div className="card-body" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, borderTop: '1px solid var(--border)' }}>

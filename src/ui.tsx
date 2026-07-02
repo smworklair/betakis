@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode, type FormEvent } from 'react';
-import { Sparkles, ArrowUp, AlertTriangle, Wallet, ShieldCheck, BarChart3, Calendar } from 'lucide-react';
+import { Sparkles, ArrowUp, AlertTriangle, Wallet, ShieldCheck } from 'lucide-react';
 import type { Role, Severity } from './data';
 import type { NexReply } from './nexbrain';
 
@@ -32,6 +32,9 @@ interface AppCtx {
   /** Navigation sidebar can be disabled (AI-first mode) — persisted setting. */
   sidebarEnabled: boolean;
   setSidebarEnabled: (v: boolean) => void;
+  /** Live agent ticker in the topbar — opt-in from Settings. */
+  pulseEnabled: boolean;
+  setPulseEnabled: (v: boolean) => void;
   /** Transient: slide-over nav open (mobile, or when sidebar disabled). */
   navOpen: boolean;
   setNavOpen: (v: boolean) => void;
@@ -66,6 +69,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [inlineSeed, setInlineSeed] = useState<string | null>(null);
   const [inlineTitle, setInlineTitle] = useState<string | null>(null);
   const [sidebarEnabled, setSidebarEnabledState] = useState<boolean>(() => localStorage.getItem('nex-sidebar') !== 'off');
+  const [pulseEnabled, setPulseEnabledState] = useState<boolean>(() => localStorage.getItem('nex-pulse') === 'on');
   const [navOpen, setNavOpen] = useState(false);
   const [explain, setExplain] = useState<ExplainReq | null>(null);
   const [chatLog, setChatLog] = useState<ChatMsg[]>([]);
@@ -84,6 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const openChat = (q?: string) => { if (q) setPendingAsk(q); setInlineHost(null); setNavOpen(false); setPage('chat'); };
   const clearPendingAsk = () => setPendingAsk(null);
   const setSidebarEnabled = (v: boolean) => { setSidebarEnabledState(v); localStorage.setItem('nex-sidebar', v ? 'on' : 'off'); };
+  const setPulseEnabled = (v: boolean) => { setPulseEnabledState(v); localStorage.setItem('nex-pulse', v ? 'on' : 'off'); };
   const openExplain = (r: ExplainReq) => setExplain(r);
   const closeExplain = () => setExplain(null);
 
@@ -93,7 +98,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, inlineHost, inlineSeed, inlineTitle, openInlineAt, closeInline, sidebarEnabled, setSidebarEnabled, navOpen, setNavOpen, explain, openExplain, closeExplain, chatLog, setChatLog, openChat, pendingAsk, clearPendingAsk, toast }}>
+    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, inlineHost, inlineSeed, inlineTitle, openInlineAt, closeInline, sidebarEnabled, setSidebarEnabled, pulseEnabled, setPulseEnabled, navOpen, setNavOpen, explain, openExplain, closeExplain, chatLog, setChatLog, openChat, pendingAsk, clearPendingAsk, toast }}>
       {children}
       {toastMsg && <div className="toast fade"><Sparkles size={15} style={{ color: 'var(--ai)' }} />{toastMsg}</div>}
     </Ctx.Provider>
@@ -154,8 +159,6 @@ export function AskHero() {
     { icon: AlertTriangle, label: 'Кто в зоне риска', q: 'Покажи студентов в зоне риска и почему' },
     { icon: Wallet, label: 'Финансы', q: 'Что с финансами и задолженностью?' },
     { icon: ShieldCheck, label: 'Безопасность', q: 'Состояние безопасности' },
-    { icon: BarChart3, label: 'Аналитика', q: 'Сделай сводку по успеваемости' },
-    { icon: Calendar, label: 'Расписание', q: 'Покажи окна в расписании' },
   ];
   return (
     <div className="ask-hero">

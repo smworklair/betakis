@@ -86,6 +86,14 @@ function AdminCenter() {
         </div>
       </div>
 
+      {/* state first: спокойный обзор до списка дел */}
+      <div className="grid cols-4" style={{ marginBottom: 18 }}>
+        <Kpi icon={<Users size={14} />} label="Студентов" value="100" delta="+4 за месяц" up />
+        <Kpi icon={<CalendarCheck size={14} />} label="Посещаемость" value="91%" delta="−2% за неделю" up={false} />
+        <Kpi icon={<Wallet size={14} />} label="Задолженность" value="₽ 248K" delta="−12% за неделю" up />
+        <Kpi icon={<FileText size={14} />} label="Заявления" value="3" delta="+1 новое" up />
+      </div>
+
       {/* recommended next actions — answers "what should I do next" */}
       <div className="card" style={{ marginBottom: 18 }}>
         <div className="card-head"><div className="card-title"><Sparkles size={15} style={{ color: 'var(--ai)' }} /> Рекомендованные действия</div><span className="dim" style={{ fontSize: 12 }}>подобрано NEX</span></div>
@@ -99,14 +107,6 @@ function AdminCenter() {
           <Rec tone="medium" icon={<FileText size={16} />} title="2 приказа об отчислении ждут подписи" why="подготовлены NEX, требуется проверка и подпись"
             actions={[{ label: 'Открыть', primary: true, run: () => toast('Открываю черновики приказов') }]} />
         </div>
-      </div>
-
-      {/* state */}
-      <div className="grid cols-4" style={{ marginBottom: 18 }}>
-        <Kpi icon={<Users size={14} />} label="Студентов" value="100" delta="+4 за месяц" up />
-        <Kpi icon={<CalendarCheck size={14} />} label="Посещаемость" value="91%" delta="−2% за неделю" up={false} />
-        <Kpi icon={<Wallet size={14} />} label="Задолженность" value="₽ 248K" delta="−12% за неделю" up />
-        <Kpi icon={<FileText size={14} />} label="Заявления" value="3" delta="+1 новое" up />
       </div>
 
       <Charts />
