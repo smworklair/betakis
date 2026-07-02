@@ -1,9 +1,40 @@
-import { Sun, Moon, ShieldCheck, KeyRound, Sparkles, LogOut, PanelLeft } from 'lucide-react';
-import { PageHead, Chip, Avatar, Soon, useApp } from '../ui';
+import { useState, type ReactNode } from 'react';
+import { Sun, Moon, ShieldCheck, KeyRound, Sparkles, LogOut, PanelLeft, Bot, Palette, Check, X as XIcon } from 'lucide-react';
+import { PageHead, Chip, Avatar, Soon, Beta, useApp, type Prefs } from '../ui';
 import { roleLabel } from '../data';
+import { getGeminiKey, setGeminiKey, testGeminiKey, llmReady } from '../llm';
+
+const ACCENTS: { id: Prefs['accent']; name: string; color: string }[] = [
+  { id: 'blue', name: 'Синий', color: '#2f6fed' },
+  { id: 'violet', name: 'Фиолетовый', color: '#6d5ae6' },
+  { id: 'green', name: 'Зелёный', color: '#0f9d58' },
+  { id: 'orange', name: 'Оранжевый', color: '#ea7317' },
+  { id: 'rose', name: 'Розовый', color: '#db2777' },
+  { id: 'graphite', name: 'Графит', color: '#3f3f46' },
+];
+
+/* строка-настройка с сегментом Вкл/Выкл или вариантами */
+function Row({ title, desc, children }: { title: string; desc: string; children: ReactNode }) {
+  return (
+    <div className="card-body set-row">
+      <div><div style={{ fontWeight: 600 }}>{title}</div><div className="muted" style={{ fontSize: 13 }}>{desc}</div></div>
+      {children}
+    </div>
+  );
+}
 
 export default function Settings() {
-  const { theme, setTheme, user, setUser, sidebarEnabled, setSidebarEnabled, pulseEnabled, setPulseEnabled, openChat, toast } = useApp();
+  const { theme, setTheme, user, setUser, sidebarEnabled, setSidebarEnabled, pulseEnabled, setPulseEnabled, prefs, setPref, setPage, openChat, toast } = useApp();
+  const [key, setKey] = useState(getGeminiKey());
+  const [keyState, setKeyState] = useState<'idle' | 'checking' | 'ok' | 'bad'>(llmReady() ? 'ok' : 'idle');
+
+  const saveKey = async () => {
+    if (!key.trim()) { setGeminiKey(''); setKeyState('idle'); toast('Ключ удалён — NEX в демо-режиме'); return; }
+    setKeyState('checking');
+    const ok = await testGeminiKey(key);
+    if (ok) { setGeminiKey(key); setKeyState('ok'); toast('Gemini подключён — NEX отвечает живой моделью'); }
+    else { setKeyState('bad'); toast('Ключ не прошёл проверку'); }
+  };
   return (
     <div className="fade content-narrow" style={{ maxWidth: 760 }}>
       <PageHead title="Настройки" sub="Профиль, оформление и безопасность" />
@@ -34,6 +65,75 @@ export default function Settings() {
             <button className={theme === 'dark' ? 'on' : ''} onClick={() => setTheme('dark')}><Moon size={14} style={{ marginRight: 6 }} />Тёмная</button>
           </div>
         </div>
+      </div>
+
+      {/* ---- Персонализация: цвет, плотность, шрифт, углы, полоса NEX ---- */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-head"><div className="card-title"><Palette size={15} /> Персонализация</div></div>
+        <Row title="Цвет акцента" desc="Кнопки, ссылки, активные элементы">
+          <div className="accent-row">
+            {ACCENTS.map((a) => (
+              <button key={a.id} className={`accent-swatch ${prefs.accent === a.id ? 'on' : ''}`} style={{ background: a.color }}
+                title={a.name} onClick={() => setPref('accent', a.id)}>
+                {prefs.accent === a.id && <Check size={13} />}
+              </button>
+            ))}
+          </div>
+        </Row>
+        <Row title="Плотность" desc="Компактный режим — больше данных на экране">
+          <div className="seg">
+            <button className={prefs.density === 'normal' ? 'on' : ''} onClick={() => setPref('density', 'normal')}>Обычная</button>
+            <button className={prefs.density === 'compact' ? 'on' : ''} onClick={() => setPref('density', 'compact')}>Компактная</button>
+          </div>
+        </Row>
+        <Row title="Размер текста" desc="Крупный — легче читать с расстояния">
+          <div className="seg">
+            <button className={prefs.font === 'normal' ? 'on' : ''} onClick={() => setPref('font', 'normal')}>Обычный</button>
+            <button className={prefs.font === 'large' ? 'on' : ''} onClick={() => setPref('font', 'large')}>Крупный</button>
+          </div>
+        </Row>
+        <Row title="Скругления" desc="Мягкие углы или строгая геометрия">
+          <div className="seg">
+            <button className={prefs.corners === 'soft' ? 'on' : ''} onClick={() => setPref('corners', 'soft')}>Мягкие</button>
+            <button className={prefs.corners === 'sharp' ? 'on' : ''} onClick={() => setPref('corners', 'sharp')}>Строгие</button>
+          </div>
+        </Row>
+        <Row title="Полоса подсказок NEX" desc="Проактивная строка ИИ вверху страниц">
+          <div className="seg">
+            <button className={prefs.strip ? 'on' : ''} onClick={() => setPref('strip', true)}>Вкл</button>
+            <button className={!prefs.strip ? 'on' : ''} onClick={() => setPref('strip', false)}>Выкл</button>
+          </div>
+        </Row>
+      </div>
+
+      {/* ---- Интеллект: живой Gemini. Ключ хранится только в этом браузере ---- */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-head">
+          <div className="card-title"><Sparkles size={15} style={{ color: 'var(--ai)' }} /> Интеллект · Gemini</div>
+          {keyState === 'ok' ? <Chip tone="chip-success">подключён</Chip> : <Chip tone="chip-neutral">демо-режим</Chip>}
+        </div>
+        <div className="card-body">
+          <div className="muted" style={{ fontSize: 13, marginBottom: 10 }}>
+            Вставьте ключ Gemini API — чат, инлайн-панели, объяснение выделенного и планировщик задач начнут отвечать живой моделью.
+            Ключ хранится <b>только в этом браузере</b> и не попадает на сервер или в код.
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input className="input" type="password" value={key} onChange={(e) => { setKey(e.target.value); setKeyState('idle'); }} placeholder="Ключ Gemini API…" style={{ flex: 1 }} />
+            <button className="btn btn-primary" onClick={saveKey} disabled={keyState === 'checking'}>
+              {keyState === 'checking' ? 'Проверяю…' : 'Сохранить'}
+            </button>
+            {getGeminiKey() && <button className="btn btn-ghost" title="Отключить" onClick={() => { setGeminiKey(''); setKey(''); setKeyState('idle'); toast('Gemini отключён'); }}><XIcon size={15} /></button>}
+          </div>
+          {keyState === 'bad' && <div style={{ color: 'var(--danger)', fontSize: 12.5, marginTop: 8 }}>Ключ не прошёл проверку — проверьте его в Google AI Studio.</div>}
+        </div>
+      </div>
+
+      {/* ---- Центр агентов живёт здесь, а не в левом меню ---- */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-head"><div className="card-title"><Bot size={15} /> Агенты NEX</div><Beta /></div>
+        <Row title="Центр агентов" desc="Штат фоновых агентов: автопилот, уровни автономии, очередь подтверждений, правила и журнал.">
+          <button className="btn btn-outline" onClick={() => setPage('agents')}><Bot size={15} />Открыть</button>
+        </Row>
       </div>
 
       {/* Navigation & AI architecture */}

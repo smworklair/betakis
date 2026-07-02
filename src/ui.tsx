@@ -5,7 +5,18 @@ import type { NexReply } from './nexbrain';
 
 export type Theme = 'light' | 'dark';
 export interface User { name: string; role: Role; }
-export interface ChatMsg extends Partial<NexReply> { who: 'u' | 'n'; text: string; run?: string; }
+
+/* ---- персонализация интерфейса (хранится в localStorage) ---- */
+export interface Prefs {
+  accent: 'blue' | 'violet' | 'green' | 'orange' | 'rose' | 'graphite';
+  density: 'normal' | 'compact';
+  font: 'normal' | 'large';
+  corners: 'soft' | 'sharp';
+  /** проактивная полоса NEX на страницах */
+  strip: boolean;
+}
+export const DEFAULT_PREFS: Prefs = { accent: 'blue', density: 'normal', font: 'normal', corners: 'soft', strip: true };
+export interface ChatMsg extends Partial<NexReply> { who: 'u' | 'n'; text: string; run?: string; pending?: boolean; }
 /** Floating context-less explainer, anchored to a text selection. */
 export interface ExplainReq { x: number; y: number; text: string; }
 
@@ -35,6 +46,9 @@ interface AppCtx {
   /** Live agent ticker in the topbar — opt-in from Settings. */
   pulseEnabled: boolean;
   setPulseEnabled: (v: boolean) => void;
+  /** Персонализация: цвет, плотность, шрифт, углы, полоса NEX. */
+  prefs: Prefs;
+  setPref: <K extends keyof Prefs>(k: K, v: Prefs[K]) => void;
   /** Transient: slide-over nav open (mobile, or when sidebar disabled). */
   navOpen: boolean;
   setNavOpen: (v: boolean) => void;
@@ -70,6 +84,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [inlineTitle, setInlineTitle] = useState<string | null>(null);
   const [sidebarEnabled, setSidebarEnabledState] = useState<boolean>(() => localStorage.getItem('nex-sidebar') !== 'off');
   const [pulseEnabled, setPulseEnabledState] = useState<boolean>(() => localStorage.getItem('nex-pulse') === 'on');
+  const [prefs, setPrefs] = useState<Prefs>(() => {
+    try { return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem('nex-prefs') || '{}') }; }
+    catch { return DEFAULT_PREFS; }
+  });
   const [navOpen, setNavOpen] = useState(false);
   const [explain, setExplain] = useState<ExplainReq | null>(null);
   const [chatLog, setChatLog] = useState<ChatMsg[]>([]);
@@ -80,6 +98,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('nex-theme', theme);
   }, [theme]);
+
+  /* применяем персонализацию как data-атрибуты на <html> — вся логика в CSS */
+  useEffect(() => {
+    const el = document.documentElement;
+    el.setAttribute('data-accent', prefs.accent);
+    el.setAttribute('data-density', prefs.density);
+    el.setAttribute('data-font', prefs.font);
+    el.setAttribute('data-corners', prefs.corners);
+    localStorage.setItem('nex-prefs', JSON.stringify(prefs));
+  }, [prefs]);
+
+  const setPref = <K extends keyof Prefs>(k: K, v: Prefs[K]) => setPrefs((p) => ({ ...p, [k]: v }));
 
   const openStudent = (id: number) => setObjStudent(id);
   const closeObject = () => setObjStudent(null);
@@ -98,7 +128,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, inlineHost, inlineSeed, inlineTitle, openInlineAt, closeInline, sidebarEnabled, setSidebarEnabled, pulseEnabled, setPulseEnabled, navOpen, setNavOpen, explain, openExplain, closeExplain, chatLog, setChatLog, openChat, pendingAsk, clearPendingAsk, toast }}>
+    <Ctx.Provider value={{ theme, setTheme, user, setUser, page, setPage, objStudent, openStudent, closeObject, cmdOpen, setCmdOpen, inlineHost, inlineSeed, inlineTitle, openInlineAt, closeInline, sidebarEnabled, setSidebarEnabled, pulseEnabled, setPulseEnabled, prefs, setPref, navOpen, setNavOpen, explain, openExplain, closeExplain, chatLog, setChatLog, openChat, pendingAsk, clearPendingAsk, toast }}>
       {children}
       {toastMsg && <div className="toast fade"><Sparkles size={15} style={{ color: 'var(--ai)' }} />{toastMsg}</div>}
     </Ctx.Provider>

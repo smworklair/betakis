@@ -21,7 +21,8 @@
   --text-3:      #a0a0ac;
 
   --accent:      #2f6fed;
-  --accent-weak: #eaf1ff;
+  /* слабый оттенок считается от акцента — работает с любым выбранным цветом */
+  --accent-weak: color-mix(in srgb, var(--accent) 11%, var(--surface));
   --accent-fg:   #ffffff;
 
   --ai:          #6d5ae6;
@@ -61,7 +62,7 @@
   --text-3:      #6d6d78;
 
   --accent:      #5b8cff;
-  --accent-weak: #17223d;
+  --accent-weak: color-mix(in srgb, var(--accent) 18%, var(--surface));
   --accent-fg:   #0b0b0d;
 
   --ai:          #9d8cff;
@@ -79,6 +80,29 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
   --shadow-md: 0 14px 38px -10px rgba(0, 0, 0, 0.65);
 }
+
+/* ============================================================
+   Персонализация: цвет акцента / плотность / шрифт / углы
+   (управляется data-атрибутами на <html> из Настроек)
+   ============================================================ */
+[data-accent="violet"]   { --accent: #6d5ae6; } [data-theme="dark"][data-accent="violet"]   { --accent: #9d8cff; }
+[data-accent="green"]    { --accent: #0f9d58; } [data-theme="dark"][data-accent="green"]    { --accent: #34d27f; }
+[data-accent="orange"]   { --accent: #ea7317; } [data-theme="dark"][data-accent="orange"]   { --accent: #f59e4b; }
+[data-accent="rose"]     { --accent: #db2777; } [data-theme="dark"][data-accent="rose"]     { --accent: #f472b6; }
+[data-accent="graphite"] { --accent: #3f3f46; } [data-theme="dark"][data-accent="graphite"] { --accent: #a1a1aa; --accent-fg: #0b0b0d; }
+
+[data-font="large"] body { font-size: 15.5px; }
+
+[data-corners="sharp"] { --r-sm: 4px; --r-md: 5px; --r-lg: 7px; }
+
+[data-density="compact"] .card-body { padding: 11px 13px; }
+[data-density="compact"] .card-head { padding: 10px 13px; }
+[data-density="compact"] .content { padding: 16px 20px 36px; }
+[data-density="compact"] .kpi { padding: 10px 13px; }
+[data-density="compact"] .kpi-value { font-size: 22px; }
+[data-density="compact"] .feed-row { padding: 8px 13px; }
+[data-density="compact"] .tbl td { padding: 8px 13px; }
+[data-density="compact"] .page-head { margin-bottom: 14px; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
 
@@ -790,6 +814,21 @@ table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; }
 .pilot-btn.on { border-color: var(--ai); background: var(--ai-weak); }
 .pilot-btn.on b { color: var(--ai); }
 @media (max-width: 720px) { .pilot-row { grid-template-columns: 1fr; } }
+
+/* настройки: строки и свотчи акцента */
+.set-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.set-row:first-of-type { border-top: none; }
+.accent-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.accent-swatch { width: 30px; height: 30px; border-radius: 999px; border: 2px solid transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; transition: transform .12s, border-color .12s; }
+.accent-swatch:hover { transform: scale(1.1); }
+.accent-swatch.on { border-color: var(--text); }
+
+/* индикатор «печатает» */
+.typing { display: inline-flex; gap: 5px; padding: 6px 2px; }
+.typing span { width: 7px; height: 7px; border-radius: 999px; background: var(--ai); opacity: .35; animation: typing 1.1s infinite; }
+.typing span:nth-child(2) { animation-delay: .18s; }
+.typing span:nth-child(3) { animation-delay: .36s; }
+@keyframes typing { 0%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
 
 /* тумблер правила */
 .rule-toggle { width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--border-2); background: var(--surface-2); position: relative; cursor: pointer; flex-shrink: 0; transition: background .15s; }

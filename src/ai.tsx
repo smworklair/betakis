@@ -4,13 +4,14 @@ import { Sparkles, X, ArrowUp, ArrowRight, Quote, ExternalLink } from 'lucide-re
 import { useApp, Chip, NexAsk } from './ui';
 import { students, finance } from './data';
 import { nexReply, attendanceRate, avgGrade, pageInsight, PAGE_TITLES } from './nexbrain';
+import { llmReady, geminiAsk } from './llm';
 
 /* ---------- Proactive strip: NEX speaks first on every screen ---------- */
 export function ProactiveStrip() {
-  const { page } = useApp();
+  const { page, prefs } = useApp();
   const [dismissed, setDismissed] = useState<Record<string, boolean>>({});
   const ins = pageInsight(page);
-  if (!ins || dismissed[page]) return null;
+  if (!prefs.strip || !ins || dismissed[page]) return null;
   return (
     <div className="nex-strip">
       <div className="nex-strip-ic"><Sparkles size={15} /></div>
@@ -67,24 +68,49 @@ function InlinePanel() {
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     if (inlineSeed) {
-      const a = nexReply(inlineSeed, { student: ctx.sid ?? null, page });
-      setMsgs([{ who: 'u', text: inlineSeed }, { who: 'n', text: a.text, nav: a.nav, action: a.action }]);
+      if (llmReady()) {
+        setMsgs([{ who: 'u', text: inlineSeed }, { who: 'n', text: '…' }]);
+        geminiAsk(`Контекст: пользователь на экране «${ctx.title}». Вопрос: ${inlineSeed}`)
+          .then((text) => { if (!cancelled) setMsgs([{ who: 'u', text: inlineSeed }, { who: 'n', text }]); })
+          .catch(() => {
+            if (cancelled) return;
+            const a = nexReply(inlineSeed, { student: ctx.sid ?? null, page });
+            setMsgs([{ who: 'u', text: inlineSeed }, { who: 'n', text: a.text, nav: a.nav, action: a.action }]);
+          });
+      } else {
+        const a = nexReply(inlineSeed, { student: ctx.sid ?? null, page });
+        setMsgs([{ who: 'u', text: inlineSeed }, { who: 'n', text: a.text, nav: a.nav, action: a.action }]);
+      }
     } else {
       setMsgs([{ who: 'n', text: `Я раскрылся прямо в этом блоке и вижу контекст страницы «${ctx.title}». Спрашивайте.` }]);
     }
     setInput('');
     rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inlineSeed, inlineTitle]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'nearest' }); }, [msgs]);
 
-  const ask = (q: string) => {
+  /* Gemini, если ключ подключён; иначе локальный мок (nexbrain) */
+  const ask = async (q: string) => {
     if (!q.trim()) return;
-    const a = nexReply(q, { student: ctx.sid ?? null, page });
-    setMsgs((m) => [...m, { who: 'u', text: q }, { who: 'n', text: a.text, nav: a.nav, action: a.action }]);
     setInput('');
+    setMsgs((m) => [...m, { who: 'u', text: q }]);
+    if (llmReady()) {
+      setMsgs((m) => [...m, { who: 'n', text: '…' }]);
+      try {
+        const text = await geminiAsk(`Контекст: пользователь на экране «${ctx.title}». Вопрос: ${q}`);
+        setMsgs((m) => [...m.slice(0, -1), { who: 'n', text }]);
+        return;
+      } catch {
+        setMsgs((m) => m.slice(0, -1)); // откат к моку ниже
+      }
+    }
+    const a = nexReply(q, { student: ctx.sid ?? null, page });
+    setMsgs((m) => [...m, { who: 'n', text: a.text, nav: a.nav, action: a.action }]);
   };
   const submit = (e: FormEvent) => { e.preventDefault(); ask(input); };
 
@@ -181,20 +207,35 @@ function explainSelection(text: string): string {
 
 function SelExplain() {
   const { explain, closeExplain, openChat } = useApp();
+  const [llmText, setLlmText] = useState<string | null>(null);
+
+  /* Gemini объясняет выделенное; мок — мгновенный фолбэк */
+  useEffect(() => {
+    setLlmText(null);
+    if (!explain || !llmReady()) return;
+    let cancelled = false;
+    geminiAsk(`Объясни коротко (1-3 предложения), что означает выделенный фрагмент интерфейса: «${explain.text}»`,
+      { system: 'Ты — NEX, помощник информационной системы колледжа. Объясняй термины простым русским языком, очень коротко.' })
+      .then((t) => { if (!cancelled) setLlmText(t); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [explain]);
+
   if (!explain) return null;
   const W = 320;
   const left = Math.max(12, Math.min(explain.x - W / 2, window.innerWidth - W - 12));
   const top = Math.max(12, Math.min(explain.y, window.innerHeight - 180));
+  const body = llmText ?? (llmReady() ? 'NEX думает…' : explainSelection(explain.text));
   return (
     <>
       <div className="inline-veil" onClick={closeExplain} />
       <div className="sel-explain" style={{ left, top, width: W }} role="dialog" aria-label="NEX объясняет">
         <div className="sel-explain-head">
           <Sparkles size={13} className="spark" /><b>NEX объясняет</b>
-          <span className="inline-badge">без контекста</span>
+          <span className="inline-badge">{llmReady() ? 'gemini' : 'без контекста'}</span>
           <button className="icon-btn" title="Закрыть" onClick={closeExplain}><X size={15} /></button>
         </div>
-        <div className="sel-explain-body">{explainSelection(explain.text)}</div>
+        <div className="sel-explain-body">{body}</div>
         <button className="sel-explain-more" onClick={() => { openChat(`${explain.text} — объясни подробнее`); closeExplain(); }}>
           Подробнее в чате с данными <ArrowRight size={13} />
         </button>
