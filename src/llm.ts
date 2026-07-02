@@ -17,10 +17,12 @@ export const setGeminiKey = (k: string) => {
 };
 export const llmReady = () => getGeminiKey().length > 10;
 
-/** Сводка данных организации — контекст для модели.
-    BACKEND: заменяется на RAG по реальной БД. */
+/** Системный контекст NEX — личность + данные организации.
+    BACKEND: данные заменяются на RAG по реальной БД. */
 export const ORG_CONTEXT = `
 Ты — NEX (Neural Executive eXpert), интеллектуальный помощник корпоративной информационной системы колледжа.
+
+Форматирование: можешь использовать markdown — **жирный** для акцентов, списки (- или 1.), короткие заголовки. Не злоупотребляй.
 
 Ты встроен непосредственно в систему и являешься её интеллектуальным аналитическим центром. Пользователь общается не с обычным чат-ботом, а с ИИ всей информационной системы.
 
@@ -234,6 +236,9 @@ export const ORG_CONTEXT = `
 
 Используй контекст только тогда, когда он действительно относится к вопросу пользователя.
 `;
+
+export interface LlmTurn { role: 'user' | 'model'; text: string; }
+
 /** Один вызов Gemini generateContent. Бросает исключение при ошибке —
     вызывающий код обязан откатиться на локальный мок (nexbrain). */
 export async function geminiAsk(user: string, opts: { system?: string; history?: LlmTurn[] } = {}): Promise<string> {
@@ -244,7 +249,7 @@ export async function geminiAsk(user: string, opts: { system?: string; history?:
     { role: 'user', parts: [{ text: user }] },
   ];
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 25000);
+  const timer = setTimeout(() => ctrl.abort(), 40000);
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
       method: 'POST',
@@ -253,8 +258,8 @@ export async function geminiAsk(user: string, opts: { system?: string; history?:
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: opts.system || ORG_CONTEXT }] },
         contents,
-        /* thinkingBudget: 0 — быстрые ответы без «размышлений» */
-        generationConfig: { temperature: 0.4, maxOutputTokens: 2000, thinkingConfig: { thinkingBudget: 0 } },
+        /* лёгкое «мышление» ради связности, но без долгих пауз */
+        generationConfig: { temperature: 0.75, topP: 0.95, maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 256 } },
       }),
     });
     if (!res.ok) throw new Error(`gemini-${res.status}`);

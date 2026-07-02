@@ -7,6 +7,7 @@ import {
 import { useApp, Chip } from '../ui';
 import { nexReply, atRisk, planFor, type NexData, type NavLink } from '../nexbrain';
 import { llmReady, geminiAsk, type LlmTurn } from '../llm';
+import { Md } from '../md';
 import { finance } from '../data';
 import { Donut, Legend, type Segment } from '../charts';
 
@@ -190,7 +191,7 @@ export default function Chat() {
                   <div className="body">
                     {m.pending ? (
                       <div className="typing"><span /><span /><span /></div>
-                    ) : m.run ? <AgentRun label={m.run} /> : <div className="prose">{m.text}</div>}
+                    ) : m.run ? <AgentRun label={m.run} /> : <div className="prose"><Md text={m.text} /></div>}
                     {m.data && <DataBlock kind={m.data} />}
                     {m.nav && m.nav.length > 0 && <NavChips nav={m.nav} />}
                     {m.action && (
