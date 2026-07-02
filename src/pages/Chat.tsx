@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useApp, Chip } from '../ui';
 import { nexReply, atRisk, planFor, type NexData, type NavLink } from '../nexbrain';
+import { llmReady, geminiAsk, type LlmTurn } from '../llm';
 import { finance } from '../data';
 import { Donut, Legend, type Segment } from '../charts';
 
@@ -112,12 +113,30 @@ export default function Chat() {
   const [mentionOpen, setMentionOpen] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
 
-  const send = (q: string) => {
+  /* Живой Gemini, если ключ подключён в Настройках; иначе локальный мок.
+     BACKEND: в проде — /api/nex с ключом в env, история — с сервера. */
+  const send = async (q: string) => {
     const text = q.trim();
     if (!text) return;
-    const a = nexReply(text);
-    setChatLog((m) => [...m, { who: 'u', text }, { who: 'n', ...a }]);
     setInput('');
+    setChatLog((m) => [...m, { who: 'u', text }]);
+
+    if (llmReady()) {
+      setChatLog((m) => [...m, { who: 'n', text: '', pending: true }]);
+      const history: LlmTurn[] = chatLog
+        .filter((m) => !m.run && !m.pending && m.text)
+        .slice(-8)
+        .map((m) => ({ role: m.who === 'u' ? 'user' : 'model', text: m.text }));
+      try {
+        const answer = await geminiAsk(text, { history });
+        setChatLog((m) => [...m.slice(0, -1), { who: 'n', text: answer }]);
+        return;
+      } catch {
+        setChatLog((m) => m.slice(0, -1)); // Gemini недоступен — падаем на мок
+      }
+    }
+    const a = nexReply(text);
+    setChatLog((m) => [...m, { who: 'n', ...a }]);
   };
 
   useEffect(() => {
@@ -169,7 +188,9 @@ export default function Chat() {
                 <div className="chat-msg n" key={i}>
                   <div className="ava"><Sparkles size={15} /></div>
                   <div className="body">
-                    {m.run ? <AgentRun label={m.run} /> : <div className="prose">{m.text}</div>}
+                    {m.pending ? (
+                      <div className="typing"><span /><span /><span /></div>
+                    ) : m.run ? <AgentRun label={m.run} /> : <div className="prose">{m.text}</div>}
                     {m.data && <DataBlock kind={m.data} />}
                     {m.nav && m.nav.length > 0 && <NavChips nav={m.nav} />}
                     {m.action && (
@@ -178,7 +199,7 @@ export default function Chat() {
                         <span className="dim" style={{ fontSize: 11.5 }}>NEX выполнит по шагам · с аудитом</span>
                       </div>
                     )}
-                    {!m.run && (
+                    {!m.run && !m.pending && (
                       <div className="msg-tools">
                         <button title="Скопировать" onClick={() => copy(m.text, i)}>{copied === i ? <Check size={13} /> : <Copy size={13} />}</button>
                         <button className={fb[i] === 'up' ? 'on' : ''} title="Хороший ответ" onClick={() => rate(i, 'up')}><ThumbsUp size={13} /></button>
@@ -214,7 +235,7 @@ export default function Chat() {
                 <button className="ask-send" type="submit" aria-label="Спросить"><ArrowUp size={18} /></button>
               </form>
             </div>
-            <div className="chat-dock-hint"><Users size={12} /> NEX отвечает по данным организации · файлы и коннекторы — в бете</div>
+            <div className="chat-dock-hint"><Users size={12} /> {llmReady() ? 'Gemini подключён — живые ответы' : 'Демо-режим · подключите ключ Gemini в Настройках'} · файлы и коннекторы — в бете</div>
           </div>
         </>
       )}

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { PageHead, Chip, Beta, useApp } from '../ui';
 import { planFor } from '../nexbrain';
+import { llmReady, geminiPlan } from '../llm';
 import {
   AGENTS, QUEUE, AGENT_LOG, AUTONOMY_LEVELS, AUTOPILOT_PRESETS, RULES, agentById, guessAgent, dryRun,
   type Agent, type Autonomy, type PendingAction, type Rule,
@@ -21,8 +22,8 @@ const riskTone = { low: 'chip-success', medium: 'chip-warn', high: 'chip-danger'
 const riskLabel = { low: 'низкий риск', medium: 'средний риск', high: 'высокий риск' } as const;
 
 /* ---- видимое исполнение: план тикает по шагам (BACKEND: стрим статуса воркера) ---- */
-function StepsRun({ label, onDone }: { label: string; onDone: () => void }) {
-  const steps = planFor(label);
+function StepsRun({ label, steps: given, onDone }: { label: string; steps?: string[]; onDone: () => void }) {
+  const steps = given ?? planFor(label);
   const [done, setDone] = useState(0);
   useEffect(() => {
     if (done >= steps.length) { const t = setTimeout(onDone, 900); return () => clearTimeout(t); }
@@ -49,10 +50,24 @@ function Delegate() {
   const { toast } = useApp();
   const [text, setText] = useState('');
   const [plan, setPlan] = useState<string | null>(null);
+  const [steps, setSteps] = useState<string[]>([]);
+  const [thinking, setThinking] = useState(false);
   const [running, setRunning] = useState(false);
 
-  const propose = () => { if (text.trim()) { setPlan(text.trim()); setRunning(false); } };
-  const reset = () => { setPlan(null); setText(''); setRunning(false); };
+  /* план составляет Gemini (если подключён), иначе шаблонный planFor */
+  const propose = async () => {
+    const t = text.trim();
+    if (!t) return;
+    setThinking(true);
+    let s: string[];
+    try { s = llmReady() ? await geminiPlan(t) : planFor(t); }
+    catch { s = planFor(t); }
+    setSteps(s);
+    setPlan(t);
+    setThinking(false);
+    setRunning(false);
+  };
+  const reset = () => { setPlan(null); setSteps([]); setText(''); setRunning(false); };
 
   return (
     <div className="card" style={{ marginBottom: 16 }}>
@@ -61,15 +76,16 @@ function Delegate() {
         {!plan && (
           <form className="chat-input" onSubmit={(e) => { e.preventDefault(); propose(); }}>
             <Sparkles size={16} className="lead" />
-            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Например: подготовь справки всем отличникам ПИ-21-1…" />
+            <input value={text} onChange={(e) => setText(e.target.value)} disabled={thinking}
+              placeholder={thinking ? 'NEX составляет план…' : 'Например: подготовь справки всем отличникам ПИ-21-1…'} />
             <button className="ask-send" type="submit" aria-label="Составить план"><ArrowUp size={17} /></button>
           </form>
         )}
         {plan && !running && (
           <div className="agent-run">
-            <div className="agent-run-head"><Sparkles size={13} />План: {plan}</div>
+            <div className="agent-run-head"><Sparkles size={13} />План: {plan}{llmReady() && <span className="inline-badge" style={{ marginLeft: 6 }}>gemini</span>}</div>
             <div className="agent-steps">
-              {planFor(plan).map((s, i) => (
+              {steps.map((s, i) => (
                 <div key={i} className="agent-step done"><span className="dot"><Check size={11} /></span>{s}</div>
               ))}
             </div>
@@ -79,7 +95,7 @@ function Delegate() {
             </div>
           </div>
         )}
-        {plan && running && <StepsRun label={plan} onDone={() => { toast('Задача выполнена, отчёт в журнале'); reset(); }} />}
+        {plan && running && <StepsRun label={plan} steps={steps} onDone={() => { toast('Задача выполнена, отчёт в журнале'); reset(); }} />}
       </div>
     </div>
   );

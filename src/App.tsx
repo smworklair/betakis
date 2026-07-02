@@ -59,7 +59,7 @@ const NAV: { title: string; items: string[] }[] = [
   { title: 'Аналитика', items: ['analytics', 'graduation'] },
   { title: 'Безопасность', items: ['security'] },
   { title: 'Бета', items: ['messenger', 'notifications', 'documents', 'feed', 'campus'] },
-  { title: 'Эксперимент', items: ['agents'] },
+  /* «Агенты» открываются из Настроек — в меню не показываем */
 ];
 
 function renderPage(id: string): ReactNode {
